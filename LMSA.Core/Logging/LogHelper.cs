@@ -142,6 +142,29 @@ public class LogHelper
         }
     }
 
+    public void AnalyzeUnsafeText(string _msg)
+    {
+        if (string.IsNullOrEmpty(_msg))
+        {
+            return;
+        }
+        try
+        {
+            var jObject = Newtonsoft.Json.Linq.JObject.Parse(_msg);
+            foreach (string item in new List<string> { "content.name", "content.fullName" })
+            {
+                string text = jObject.SelectToken(item)?.ToString();
+                if (!string.IsNullOrEmpty(text))
+                {
+                    m_UnsafeText.Add(text);
+                }
+            }
+        }
+        catch
+        {
+        }
+    }
+
     private static string MessageDesensitization(string _msg)
     {
         m_UnsafeText.ForEach(delegate(string m)

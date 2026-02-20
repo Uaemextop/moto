@@ -10,6 +10,10 @@ public class Configurations
     private static string _BackupPath;
     private static string _GifSavePath;
     private static string _ProgramDataPath = null;
+    private static string serviceBaseUrl = null;
+    private static string serviceInterfaceUrl = null;
+    private static string _baseHttpUrl = null;
+    private static readonly object serviceBaseUrlLock = new object();
 
     private static Dictionary<bool, int> _RescueResultMap = new Dictionary<bool, int>
     {
@@ -182,6 +186,56 @@ public class Configurations
     }
 
     public static string TRANSFER_FILE_ERROR_TXT_PATH => Path.Combine(TempDir, "larger_max_size_file_list.txt");
+
+    public static string ServiceBaseUrl
+    {
+        get
+        {
+            if (string.IsNullOrEmpty(serviceBaseUrl))
+            {
+                lock (serviceBaseUrlLock)
+                {
+                    serviceBaseUrl = "https://lsa.lenovo.com";
+                }
+            }
+            return serviceBaseUrl;
+        }
+        set
+        {
+            lock (serviceBaseUrlLock)
+            {
+                serviceBaseUrl = value;
+                serviceInterfaceUrl = null;
+            }
+        }
+    }
+
+    public static string ServiceInterfaceUrl
+    {
+        get
+        {
+            if (string.IsNullOrEmpty(serviceInterfaceUrl))
+            {
+                serviceInterfaceUrl = ServiceBaseUrl + "/Interface";
+            }
+            return serviceInterfaceUrl;
+        }
+    }
+
+    public static string BaseHttpUrl
+    {
+        get
+        {
+            if (string.IsNullOrEmpty(_baseHttpUrl))
+            {
+                _baseHttpUrl = ServiceBaseUrl;
+            }
+            return _baseHttpUrl;
+        }
+        set => _baseHttpUrl = value;
+    }
+
+    public static bool IsReleaseVersion => "https://lsa.lenovo.com".Equals(ServiceBaseUrl, StringComparison.InvariantCultureIgnoreCase);
 
     public static string AdbPath => Path.Combine(".", "adb.exe");
 

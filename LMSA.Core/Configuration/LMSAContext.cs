@@ -64,6 +64,21 @@ public class LMSAContext
 
     public static string LanguagePackageRootPath => Path.Combine(Environment.CurrentDirectory, LANGUAGE);
 
+    public static string OsVersionName
+    {
+        get
+        {
+            try
+            {
+                return System.Runtime.InteropServices.RuntimeInformation.OSDescription;
+            }
+            catch
+            {
+                return "unknown";
+            }
+        }
+    }
+
     public static string MainProcessVersion
     {
         get

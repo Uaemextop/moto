@@ -20,6 +20,7 @@
     <ProjectReference Include="..\LMSA.Core\LMSA.Core.csproj" />
     <ProjectReference Include="..\LMSA.Plugins.Common\LMSA.Plugins.Common.csproj" />
     <ProjectReference Include="..\LMSA.DeviceManagement\LMSA.DeviceManagement.csproj" />
+    <ProjectReference Include="..\LMSA.WebServices\LMSA.WebServices.csproj" />
   </ItemGroup>
 
   <ItemGroup>
