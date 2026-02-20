@@ -25,7 +25,7 @@ mcp-servers:
     args:
       - "-y"
       - "@modelcontextprotocol/server-github"
-    tools: ["*"],
+    tools: ["*"]
     env:
       GITHUB_PERSONAL_ACCESS_TOKEN: "{{GITHUB_TOKEN}}"
     description: GitHub repository operations and issue tracking
