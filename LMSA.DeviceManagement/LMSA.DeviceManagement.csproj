@@ -6,4 +6,9 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\LMSA.Core\LMSA.Core.csproj" />
+    <ProjectReference Include="..\LMSA.Plugins.Common\LMSA.Plugins.Common.csproj" />
+  </ItemGroup>
+
 </Project>
