@@ -170,7 +170,6 @@ public class FeatureViewModel : BaseViewModel
 - ❌ Don't use async/await unless dealing with I/O operations
 - ❌ Don't add features not in the task list
 - ❌ Don't modify decompiled source files (read-only reference)
-- ❌ Don't commit sensitive data, credentials, or API keys
 - ❌ Don't use jQuery or obsolete patterns
 - ❌ Don't skip error handling or logging
 
