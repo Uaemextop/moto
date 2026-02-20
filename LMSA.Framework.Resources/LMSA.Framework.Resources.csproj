@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\LMSA.Framework.Services\LMSA.Framework.Services.csproj" />
+    <ProjectReference Include="..\LMSA.Framework.Download\LMSA.Framework.Download.csproj" />
+    <ProjectReference Include="..\LMSA.Common.Utilities\LMSA.Common.Utilities.csproj" />
+    <ProjectReference Include="..\LMSA.Common.Log\LMSA.Common.Log.csproj" />
+  </ItemGroup>
+
+</Project>

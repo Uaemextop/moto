@@ -21,22 +21,24 @@ This task list tracks the **complete from-scratch reimplementation** of the Leno
 
 ---
 
-## Phase 0: Create Project Structure From Scratch
+## Phase 0: Create Project Structure From Scratch ✅ COMPLETE
 
 The repository starts empty. All projects must be created from zero.
 
-- [ ] Create solution file: `dotnet new sln -n LMSA`
-- [ ] Create all `LMSA.*` project directories using `dotnet new classlib` / `dotnet new wpf` / `dotnet new worker`
-- [ ] Add all projects to the solution with `dotnet sln add`
-- [ ] Configure NuGet package references for each project
-- [ ] Create `LMSA.Tests` xUnit test project with Moq and FluentAssertions
-- [ ] Copy original config files from `decompiled/reference/` into the project:
+- [x] Create solution file: `dotnet new sln -n LMSA`
+- [x] Create all `LMSA.*` project directories using `dotnet new classlib` (24 projects + 1 test project)
+- [x] Add all projects to the solution with `dotnet sln add`
+- [x] Configure NuGet package references for each project
+- [x] Create `LMSA.Tests` xUnit test project with Moq and FluentAssertions
+- [x] Copy original config files from `decompiled/reference/` into the `Config/` directory:
   - `plugins.xml` — Plugin catalog with GUID-to-assembly mapping
   - `download-config.xml` — Download settings
   - `log4net.config` — Main application logging config
   - `log4net.plugin.config` — Plugin-specific logging config
   - `nt-log4net.config` — Service logging config
-- [ ] Verify `dotnet build` and `dotnet test` pass on empty projects
+- [x] Verify `dotnet build` and `dotnet test` pass on empty projects
+
+**Status**: All 25 projects created, solution builds successfully (0 errors, 0 warnings), all 3 initial tests pass.
 
 ### Assembly-to-Project Mapping (create all from scratch)
 

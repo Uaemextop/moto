@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <RootNamespace>lenovo.mbg.service.lmsa.dataTransfer</RootNamespace>
+    <AssemblyName>lenovo.mbg.service.lmsa.dataTransfer</AssemblyName>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../LMSA.Framework.Services/LMSA.Framework.Services.csproj" />
+    <ProjectReference Include="../LMSA.Common.Utilities/LMSA.Common.Utilities.csproj" />
+    <ProjectReference Include="../LMSA.Common.Log/LMSA.Common.Log.csproj" />
+    <ProjectReference Include="../LMSA.Common.WebServices/LMSA.Common.WebServices.csproj" />
+    <ProjectReference Include="../LMSA.HostProxy/LMSA.HostProxy.csproj" />
+    <ProjectReference Include="../LMSA.Themes/LMSA.Themes.csproj" />
+  </ItemGroup>
+</Project>
