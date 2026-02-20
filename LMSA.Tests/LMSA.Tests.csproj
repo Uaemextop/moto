@@ -1,0 +1,34 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector" Version="6.0.0" />
+    <PackageReference Include="FluentAssertions" Version="8.8.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
+    <PackageReference Include="Moq" Version="4.20.72" />
+    <PackageReference Include="xunit" Version="2.5.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.5.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\LMSA.Framework.Services\LMSA.Framework.Services.csproj" />
+    <ProjectReference Include="..\LMSA.Framework.DeviceManagement\LMSA.Framework.DeviceManagement.csproj" />
+    <ProjectReference Include="..\LMSA.Common.Utilities\LMSA.Common.Utilities.csproj" />
+    <ProjectReference Include="..\LMSA.Common.Log\LMSA.Common.Log.csproj" />
+    <ProjectReference Include="..\LMSA.Common.WebServices\LMSA.Common.WebServices.csproj" />
+    <ProjectReference Include="..\LMSA.Common\LMSA.Common.csproj" />
+  </ItemGroup>
+
+</Project>
