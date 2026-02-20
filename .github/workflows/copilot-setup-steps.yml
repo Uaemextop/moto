@@ -1,7 +1,8 @@
-name: "Copilot Setup Steps for LMSA Implementation"
+name: "Copilot Setup Steps — Download & Decompile LMSA Binaries"
 
-# This workflow configures the development environment for implementing
-# a production-ready version of Lenovo Mobile Software Assistant (LMSA)
+# This workflow ONLY downloads the original LMSA binaries and decompiles them.
+# It does NOT create, restore, or build any project. The agent must create the
+# entire open-source application from scratch based on the decompiled reference.
 
 on:
   workflow_dispatch:
@@ -24,89 +25,80 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Install .NET SDK for development
+      # Install .NET SDK (needed only for ilspycmd decompilation tool)
       - name: Set up .NET SDK
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.0'
 
-      # Install ILSpy for reference to decompiled code patterns
+      # Install ILSpy for recursive decompilation
       - name: Install ILSpy decompilation tool
         run: dotnet tool install --global ilspycmd
 
-      # Install .NET development and testing tools
-      - name: Install .NET development tools
-        run: |
-          dotnet tool install --global dotnet-format
-          dotnet tool install --global dotnet-reportgenerator-globaltool
-          dotnet tool install --global dotnet-coverage
-          dotnet tool install --global dotnet-outdated-tool
-          dotnet tool install --global dotnet-ef
-
-      # Install code quality and security analyzers
-      - name: Install code quality analyzers
-        run: |
-          dotnet tool install --global security-scan || echo "Security scan optional"
-          dotnet tool install --global dotnet-sonarscanner || echo "SonarScanner optional"
-
-      # Download reference binaries for pattern analysis
-      - name: Download LMSA reference binaries
+      # Download the original LMSA binaries from Dropbox
+      - name: Download LMSA original binaries
         run: |
           mkdir -p decompiled/reference
+          echo "Downloading LMSA original binaries..."
           wget -q -O /tmp/lmsa.zip "https://www.dropbox.com/scl/fi/3kuolvy11282n0q0pw99b/examples.zip?rlkey=1rldjq71q8igq0ban9lg9homn&st=07i1mewd&dl=1"
-          unzip -q /tmp/lmsa.zip -d decompiled/reference
-          echo "Downloaded LMSA reference binaries for analysis"
+          unzip -o -q /tmp/lmsa.zip -d decompiled/reference
+          rm -f /tmp/lmsa.zip
+          echo "=== Reference binaries inventory ==="
+          find decompiled/reference -type f \( -iname "*.dll" -o -iname "*.exe" \) | wc -l
+          echo " .NET binaries found for decompilation"
 
-      # Recursively decompile all .NET DLLs and EXEs for open-source reimplementation
-      - name: Decompile reference sources (recursive)
+      # Recursively decompile ALL .NET DLLs and EXEs (including plugins/)
+      - name: Decompile all .NET assemblies (recursive)
         run: |
           mkdir -p decompiled/reference-src
 
-          # Helper: check if a binary is a .NET assembly before decompiling
-          is_dotnet_assembly() {
-            file "$1" 2>/dev/null | grep -qiE "PE32|\.NET|Mono" && \
-            (strings "$1" 2>/dev/null | grep -q "mscoree\|mscorlib\|System\.Runtime" || true)
-          }
-
-          # Recursively find and decompile all .NET DLLs and EXEs
-          find decompiled/reference -type f \( -iname "*.dll" -o -iname "*.exe" \) 2>/dev/null | while read binary; do
-            # Derive output directory mirroring the source tree
+          find decompiled/reference -type f \( -iname "*.dll" -o -iname "*.exe" \) 2>/dev/null | sort | while read binary; do
             rel="${binary#decompiled/reference/}"
             name="${rel%.*}"
             outdir="decompiled/reference-src/${name}"
             mkdir -p "$outdir"
 
-            # Attempt decompilation; skip non-.NET binaries gracefully
             if ilspycmd "$binary" -p -o "$outdir" 2>/dev/null; then
-              echo "Decompiled: $binary -> $outdir"
+              cs_count=$(find "$outdir" -name "*.cs" 2>/dev/null | wc -l)
+              if [ "$cs_count" -gt 0 ]; then
+                echo "✓ Decompiled ($cs_count .cs files): $rel"
+              else
+                rm -rf "$outdir" 2>/dev/null || true
+              fi
             else
-              echo "Skipped (not a .NET assembly or error): $binary"
-              rmdir "$outdir" 2>/dev/null || true
+              echo "✗ Skipped (not .NET): $rel"
+              rm -rf "$outdir" 2>/dev/null || true
             fi
           done
 
-          # Print summary
+          echo ""
+          echo "=== DECOMPILATION SUMMARY ==="
           total=$(find decompiled/reference-src -name "*.cs" 2>/dev/null | wc -l)
-          echo "Decompilation complete. Total .cs files generated: $total"
-
-      # Restore NuGet packages if solution exists
-      - name: Restore NuGet packages
-        run: |
-          if ls *.sln *.slnx 2>/dev/null | head -1 > /dev/null; then
-            SLN=$(ls *.sln *.slnx 2>/dev/null | head -1)
-            echo "Found solution file: $SLN"
-            dotnet restore "$SLN" || echo "Restore had warnings (non-fatal)"
-          else
-            echo "No solution file found — agent will initialize the project structure"
+          echo "Total .cs files generated: $total"
+          echo ""
+          echo "=== Lenovo custom assemblies ==="
+          for dir in decompiled/reference-src/lenovo.mbg.service.*; do
+            [ -d "$dir" ] && echo "  $(basename $dir): $(find "$dir" -name '*.cs' | wc -l) files"
+          done
+          echo ""
+          echo "=== Main application ==="
+          [ -d "decompiled/reference-src/Software Fix" ] && echo "  Software Fix: $(find 'decompiled/reference-src/Software Fix' -name '*.cs' | wc -l) files"
+          echo ""
+          echo "=== Plugin directories ==="
+          if [ -d "decompiled/reference-src/plugins" ]; then
+            for dir in decompiled/reference-src/plugins/*/; do
+              guid=$(basename "$dir")
+              count=$(find "$dir" -name "*.cs" | wc -l)
+              main_asm=$(find "$dir" -maxdepth 1 -type d -name "lenovo.mbg.service.lmsa.*" 2>/dev/null | head -1 | xargs basename 2>/dev/null || echo "unknown")
+              echo "  $guid ($main_asm): $count files"
+            done
           fi
 
-      # Cache build artifacts and reference sources
-      - name: Cache build and references
+      # Cache decompiled sources so subsequent runs are faster
+      - name: Cache decompiled sources
         uses: actions/cache@v4
         with:
-          path: |
-            decompiled/
-            ~/.nuget/packages
-          key: lmsa-build-${{ hashFiles('**/*.csproj', '.github/workflows/copilot-setup-steps.yml') }}
+          path: decompiled/
+          key: lmsa-decompiled-${{ hashFiles('.github/workflows/copilot-setup-steps.yml') }}
           restore-keys: |
-            lmsa-build-
+            lmsa-decompiled-

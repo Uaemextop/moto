@@ -1,5 +1,0 @@
-<Solution>
-  <Project Path="LMSA.Core/LMSA.Core.csproj" />
-  <Project Path="LMSA.DeviceManagement/LMSA.DeviceManagement.csproj" />
-  <Project Path="LMSA.Plugins.Common/LMSA.Plugins.Common.csproj" />
-</Solution>

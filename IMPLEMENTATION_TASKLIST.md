@@ -1,474 +1,367 @@
 # LMSA Open-Source Reimplementation Task List
 
 ## Overview
-This task list tracks the complete reimplementation of the Lenovo Mobile Software Assistant (LMSA) as open-source C# code. The reference material is the set of recursively decompiled .NET binaries in `decompiled/reference-src/`.
+This task list tracks the **complete from-scratch reimplementation** of the Lenovo Mobile Software Assistant (LMSA) as open-source C# code. Every class, interface, enum, and method signature is derived from the recursively decompiled .NET binaries in `decompiled/reference-src/`.
 
-**Goal**: Build a REAL, working open-source LMSA application by faithfully reproducing the decompiled classes, enums, interfaces, and logic. This is NOT a demo or example — this is production software that will manage real Android devices.
+**Goal**: Build a REAL, working open-source LMSA application **from zero** that maintains ALL functions of the original and behaves identically. This is NOT a demo — it is production software for managing real Android devices.
+
+**Starting point**: The repository has **no solution file, no project directories, and no source code**. The CI setup workflow only downloads and decompiles the original binaries. The agent must create the entire codebase from scratch.
+
+**Original config files**: The XML and config files from `decompiled/reference/` (`plugins.xml`, `download-config.xml`, `log4net.config`, `log4net.plugin.config`, `nt-log4net.config`) must be preserved as-is in the reimplemented project.
 
 **Implementation Approach**:
-1. CI workflow recursively decompiles all .NET DLLs and EXEs from `decompiled/reference/` using `ilspycmd`
-2. **Before implementing any feature**, perform a reverse engineering analysis of the relevant decompiled DLLs/EXEs in `decompiled/reference-src/`:
-   - Identify all classes, interfaces, enums, and their relationships
-   - Document the internal logic, data flow, and dependencies
-   - Map decompiled namespaces to `LMSA.*` project targets
-3. Review the current open-source project code to understand existing implementations and avoid duplication
-4. Implement clean, open-source C# code in `LMSA.*` project directories, faithfully reproducing the decompiled logic
-5. Write comprehensive tests for all features
-6. Build and verify each component works correctly
-7. Mark tasks complete with `[x]` only after verification
+1. CI workflow downloads LMSA binaries from Dropbox and recursively decompiles all .NET DLLs/EXEs using `ilspycmd`
+2. Agent creates the entire solution and project structure from scratch using `dotnet new` commands
+3. **Before implementing any feature**, perform reverse engineering analysis of the relevant decompiled sources in `decompiled/reference-src/`
+4. Faithfully reproduce every class, interface, enum, and algorithm in the corresponding `LMSA.*` project
+5. Copy original XML/config files from `decompiled/reference/` into the project
+6. Write xUnit tests for all features
+7. Build and verify each component
+8. Mark tasks complete with `[x]` only after verification
 
 ---
 
-## Phase 0: Decompilation Setup (Prerequisite)
+## Phase 0: Create Project Structure From Scratch
 
-- [ ] Verify all reference binaries are present in `decompiled/reference/`
-- [ ] Confirm CI workflow has recursively decompiled all DLLs and EXEs to `decompiled/reference-src/`
-- [ ] Catalog all decompiled namespaces and top-level classes in `decompiled/reference-src/`
-- [ ] Map decompiled assembly structure to `LMSA.*` project directories
+The repository starts empty. All projects must be created from zero.
 
----
+- [ ] Create solution file: `dotnet new sln -n LMSA`
+- [ ] Create all `LMSA.*` project directories using `dotnet new classlib` / `dotnet new wpf` / `dotnet new worker`
+- [ ] Add all projects to the solution with `dotnet sln add`
+- [ ] Configure NuGet package references for each project
+- [ ] Create `LMSA.Tests` xUnit test project with Moq and FluentAssertions
+- [ ] Copy original config files from `decompiled/reference/` into the project:
+  - `plugins.xml` — Plugin catalog with GUID-to-assembly mapping
+  - `download-config.xml` — Download settings
+  - `log4net.config` — Main application logging config
+  - `log4net.plugin.config` — Plugin-specific logging config
+  - `nt-log4net.config` — Service logging config
+- [ ] Verify `dotnet build` and `dotnet test` pass on empty projects
 
-## Phase 0.5: Reverse Engineering Analysis of Decompiled Binaries
+### Assembly-to-Project Mapping (create all from scratch)
 
-Before implementing any feature, perform a detailed reverse engineering analysis of the relevant decompiled DLLs and EXEs. Each analysis task must be completed before writing the corresponding implementation code.
-
-### RE-1. Web Services Analysis (`lenovo.mbg.service.common.webservices`)
-- [ ] Analyze `WebApiUrl.cs` — identify all API base URLs, endpoint paths, and environment switching logic
-- [ ] Analyze `WebApiHttpRequest.cs` — document HTTP request construction, headers, content types, and error handling
-- [ ] Analyze `WebApiContext.cs` — map the web API context lifecycle, session management, and configuration
-- [ ] Analyze `RsaWebClient.cs` — document RSA-encrypted HTTP client flow (request signing, response verification)
-- [ ] Analyze `HttpMethod.cs` — catalog all supported HTTP methods and their usage patterns
-- [ ] Analyze `ApiBaseService.cs` and `ApiService.cs` — document the service layer pattern for API calls
-- [ ] Analyze `WarrantyService.cs` — document warranty check API calls, request/response models
-- [ ] Analyze `RsaService.cs` — document RSA key exchange service flow with the backend
-
-### RE-2. API Service Models Analysis (`lenovo.mbg.service.common.webservices.WebApiModel`)
-- [ ] Analyze `BaseRequestModel.cs` and `RequestModel.cs` — document the base request structure (headers, auth tokens, device identifiers)
-- [ ] Analyze `ResponseModel.cs` — document the standard response envelope (status codes, error messages, data payload)
-- [ ] Analyze `RSAKey.cs` — document RSA key model structure (public/private key format, key exchange protocol)
-- [ ] Analyze `ToolVersionModel.cs` — document tool version checking model and update mechanism
-- [ ] Analyze `FlashedDevModel.cs` — document flashed device reporting model (what data is sent to the server)
-- [ ] Analyze `OrderItem.cs`, `RespOrders.cs`, `PriceInfo.cs` — document order/pricing API models
-
-### RE-3. Software Download Framework Analysis (`lenovo.mbg.service.framework.download`)
-- [ ] Analyze `DownloadWorker.cs` and `DownloadTaskProcessor.cs` — document the download orchestration logic
-- [ ] Analyze `AbstractDownloadController.cs` — document the download controller base class and lifecycle
-- [ ] Analyze `GeneralDownloadController.cs` — document general (firmware) download flow
-- [ ] Analyze `ConditionDownloadController.cs` — document conditional download logic (device matching, version checks)
-- [ ] Analyze `ImmediatelyDownloadController.cs` — document immediate (priority) download flow
-- [ ] Analyze `HttpDownload.cs` and `FtpDownload.cs` — document HTTP/FTP download implementations (chunking, resume, retry)
-- [ ] Analyze `DownloadThreadManager.cs` and `ThreadHandle.cs` — document multi-threaded download management
-- [ ] Analyze `DownloadTask.cs` and `AbstractDownloadInfo.cs` — document download task model and state tracking
-- [ ] Analyze `DownloadStatus.cs` and `DownloadEventArgs.cs` — document download status enums and event notification
-- [ ] Analyze `SaveDownloadInfo2Json.cs` — document download progress persistence for resume capability
-- [ ] Analyze `SysSleepManagement.cs` — document system sleep prevention during downloads
-
-### RE-4. Authentication and RSA Encryption Analysis
-- [ ] Analyze `RsaHelper.cs` (in webservices) — document RSA encryption/decryption helper methods, key generation, padding
-- [ ] Analyze `RsaWebClient.cs` — document how RSA is used to sign API requests and verify responses
-- [ ] Analyze `RsaService.cs` — document RSA key negotiation protocol with the Lenovo backend
-- [ ] Analyze `RSAKey.cs` model — document key storage format and serialization
-- [ ] Analyze BouncyCastle usage patterns — identify which BouncyCastle crypto algorithms are used across the codebase
-- [ ] Cross-reference `WebApiHttpRequest.cs` auth headers — document how authentication tokens are constructed and attached
-
-### RE-5. Update and Version Checking Analysis (`lenovo.mbg.service.framework.updateversion`)
-- [ ] Analyze `IVersionCheck.cs` and `IVersionCheckV1.cs` — document version check interfaces
-- [ ] Analyze `VersionCheckV1Impl.cs` — document version check implementation (server communication, version comparison)
-- [ ] Analyze `VersionDataV1Impl.cs` — document version data retrieval and parsing
-- [ ] Analyze `VersionDownloadV1Impl.cs` — document update download logic
-- [ ] Analyze `VersionInstallV1FullImpl.cs` and `VersionInstallV1IncrementImpl.cs` — document full/incremental update installation
-- [ ] Analyze `UpdateVersionAutoPush.cs` and `UpdateWoker.cs` — document auto-update push mechanism
-- [ ] Analyze `VersionModel.cs` — document version data model and comparison logic
-
-### RE-6. Socket and Network Communication Analysis (`lenovo.mbg.service.framework.socket`)
-- [ ] Analyze socket framework classes — document WebSocket server setup and message protocol
-- [ ] Analyze inter-process communication via sockets — document message format and handlers
-- [ ] Cross-reference SuperSocket/SuperWebSocket usage in plugins — document real-time communication patterns
-
-### RE-7. Service Framework and Plugin Interfaces Analysis (`lenovo.mbg.service.framework.services`)
-- [ ] Analyze `IPlugin.cs` — document plugin interface contract and lifecycle methods
-- [ ] Analyze `IHostOperationService.cs` — document host-to-plugin operation service interface
-- [ ] Analyze `IGoogleAnalyticsTracker.cs` — document analytics tracking interface
-- [ ] Analyze `IFileDownload.cs` and `ISaveDownloadInfo.cs` — document download service interfaces
-- [ ] Analyze `DownloadInfo.cs` and `DownloadStatus.cs` — document download info model used by services layer
-- [ ] Analyze `BusinessModel.cs`, `BusinessData.cs`, `BusinessType.cs` — document business logic models and types
+| Original Assembly | LMSA Project | `dotnet new` Type |
+|---|---|---|
+| `lenovo.mbg.service.framework.services` | `LMSA.Framework.Services` | classlib |
+| `lenovo.mbg.service.framework.devicemgt` | `LMSA.Framework.DeviceManagement` | classlib |
+| `lenovo.mbg.service.framework.smartdevice` | `LMSA.Framework.SmartDevice` | classlib |
+| `lenovo.mbg.service.framework.download` | `LMSA.Framework.Download` | classlib |
+| `lenovo.mbg.service.framework.hostcontroller` | `LMSA.Framework.HostController` | classlib |
+| `lenovo.mbg.service.framework.lang` | `LMSA.Framework.Language` | classlib |
+| `lenovo.mbg.service.framework.pipes` | `LMSA.Framework.Pipes` | classlib |
+| `lenovo.mbg.service.framework.socket` | `LMSA.Framework.Socket` | classlib |
+| `lenovo.mbg.service.framework.resources` | `LMSA.Framework.Resources` | classlib |
+| `lenovo.mbg.service.framework.smartbase` | `LMSA.Framework.SmartBase` | classlib |
+| `lenovo.mbg.service.framework.updateversion` | `LMSA.Framework.UpdateVersion` | classlib |
+| `lenovo.mbg.service.common.log` | `LMSA.Common.Log` | classlib |
+| `lenovo.mbg.service.common.utilities` | `LMSA.Common.Utilities` | classlib |
+| `lenovo.mbg.service.common.webservices` | `LMSA.Common.WebServices` | classlib |
+| `lenovo.mbg.service.lmsa.common` | `LMSA.Common` | classlib |
+| `lenovo.mbg.service.lmsa.hostproxy` | `LMSA.HostProxy` | classlib |
+| `Software Fix.exe` | `LMSA.App` | wpf |
+| `LmsaWindowsService.exe` | `LMSA.WindowsService` | worker |
+| `lenovo.themes.generic` | `LMSA.Themes` | classlib |
+| `lenovo.mbg.service.lmsa.flash` | `LMSA.Plugins.Flash` | classlib |
+| `lenovo.mbg.service.lmsa.phoneManager` | `LMSA.Plugins.PhoneManager` | classlib |
+| `lenovo.mbg.service.lmsa.backuprestore` | `LMSA.Plugins.BackupRestore` | classlib |
+| `lenovo.mbg.service.lmsa.dataTransfer` | `LMSA.Plugins.DataTransfer` | classlib |
+| `lenovo.mbg.service.lmsa.hardwaretest` | `LMSA.Plugins.HardwareTest` | classlib |
+| `lenovo.mbg.service.lmsa.toolbox` | `LMSA.Plugins.Toolbox` | classlib |
+| `lenovo.mbg.service.lmsa.{forum,messenger,support,tips}` | `LMSA.Plugins.Support` | classlib |
 
 ---
 
-## Core Infrastructure
+## Phase 1: Core Service Interfaces (`LMSA.Framework.Services`)
 
-### 1. Device Communication Layer
-- [ ] Implement ADB client wrapper using SharpAdbClient library
-- [ ] Implement Fastboot client wrapper for device communication
-- [ ] Create device connection monitoring service (ADB and Fastboot)
-- [ ] Implement device state management (Offline, Online, Fastboot, Recovery, EDL)
-- [ ] Create TCP/IP device connection support
-- [ ] Implement port forwarding functionality (CreateForward, RemoveForward, RemoveAllForwards)
+**Source**: `decompiled/reference-src/lenovo.mbg.service.framework.services/` (59 .cs files)
 
-### 2. Process Execution Framework
-- [ ] Implement ProcessRunner with timeout support
-- [ ] Create ProcessString method for command execution with string output
-- [ ] Create ProcessList method for command execution with line-by-line output
-- [ ] Implement command encapsulation for device-specific operations
-- [ ] Add retry logic for failed commands
-- [ ] Implement process killing functionality (adb, fastboot)
+### 1.1 Core Plugin System
+- [ ] `IPlugin` — Plugin lifecycle: `Init()`, `CreateControl(IMessageBox)`, `CanClose()`, `IsExecuteWork()`, `OnSelected(string)`, `OnSelecting(string)`, `OnInit(object)`, `IsNonBusinessPage()`
+- [ ] `IPluginMetadata` — Plugin metadata: `PluginId` property
+- [ ] `PluginExportAttribute` — MEF export attribute with `PluginId`
+- [ ] `PluginBase` — Abstract base implementing `IPlugin` with defaults
+- [ ] `IHost` — Service locator: `HostMainWindowHandle`, `HostProcessId`, `GetService<T>(string)`, `RegisterService(string, object)`
 
-### 3. Logging System
-- [ ] Implement log4net-based logging framework
-- [ ] Create structured log methods (AddLog, AddResult, AddInfo)
-- [ ] Implement log file rotation and management
-- [ ] Add upload capability for diagnostic logs
-- [ ] Create result tracking (PASSED, FAILED, QUIT)
+### 1.2 Service Interfaces
+- [ ] `IBase`, `IConfigService`, `IDownloadService`, `IMessageBox`
+- [ ] `IGlobalCache`, `IGoogleAnalyticsTracker`, `IRsd`
+- [ ] `ILanguage`, `IPermission`, `IUser`, `ICheckVersion`
+- [ ] `IHostNavigation`, `IHostOperationService`, `IViewContext`, `IViewModelBase`
+- [ ] `IResourcesLoggingService`, `IUserBehaviorService`, `IUserMsgControl`
+- [ ] `NotifyEventProxy`, `RuntimeContext`, `ServiceProviderUtil`
+- [ ] `UserInfo`, `UserInfoArgs`, `UserMsgWndData`
+- [ ] `ViewDescription`, `WindowMessageGeneratedEventArgs`
+- [ ] `DownloadEventArgs`, `DownloadStatus` (root namespace versions)
 
-### 4. Web Services Layer (`lenovo.mbg.service.common.webservices`)
-- [ ] Implement `WebApiUrl` — API URL management with base URLs, endpoint paths, and environment switching
-- [ ] Implement `WebApiHttpRequest` — HTTP request builder with headers, content types, timeout, and error handling
-- [ ] Implement `WebApiContext` — API context with session management and configuration
-- [ ] Implement `HttpMethod` enum — supported HTTP methods
-- [ ] Implement `ApiBaseService` — base service class for API communication
-- [ ] Implement `ApiService` — main API service with device registration, firmware queries, and reporting
-- [ ] Implement `WarrantyService` — warranty check API integration
-- [ ] Implement web API request/response models (`BaseRequestModel`, `RequestModel`, `ResponseModel`)
-- [ ] Implement API data models (`ToolVersionModel`, `FlashedDevModel`, `OrderItem`, `RespOrders`, `PriceInfo`)
+### 1.3 Device Models (`.Device` sub-namespace)
+- [ ] `DeviceEx` — Abstract device base class
+- [ ] `IAndroidDevice` — 40+ property interface
+- [ ] `IDeviceOperator` — Command/Shell/Install/Uninstall/Push/Reboot/FindDevices
+- [ ] `AbstractDeviceConnectionManagerEx`
+- [ ] `DevicePhysicalStateEx` — Enum: None(-1), Offline(0), Online(2), Unauthorized(7), UsbDebugSwitchClosed(9)
+- [ ] `DeviceSoftStateEx`, `DeviceType`, `DeviceWorkType`, `DeviceLockReason`
+- [ ] `ConnectType`, `ConnectedAppTypesDefine`, `TcpStatus`
+- [ ] `MasterDeviceChangedEventArgs`, `WirelessMornitoringAddressChangedHandler`
 
-### 5. Authentication and Encryption Layer
-- [ ] Implement `RsaHelper` — RSA encryption/decryption utilities using BouncyCastle
-- [ ] Implement `RsaWebClient` — RSA-authenticated HTTP client (request signing, response verification)
-- [ ] Implement `RsaService` — RSA key exchange service for backend key negotiation
-- [ ] Implement `RSAKey` model — RSA key storage and serialization
-- [ ] Implement secure API request construction with auth tokens and device identifiers
+### 1.4 Download Models (`.Download` sub-namespace)
+- [ ] `DownloadInfo`, `DownloadStatus`, `IFileDownload`, `ISaveDownloadInfo`
+- [ ] `RemoteDownloadStatusEventArgs`
 
-### 6. Software Download Framework (`lenovo.mbg.service.framework.download`)
-- [ ] Implement `DownloadWorker` and `DownloadTaskProcessor` — download orchestration
-- [ ] Implement `AbstractDownloadController` — base download controller with lifecycle management
-- [ ] Implement `GeneralDownloadController` — standard firmware download flow
-- [ ] Implement `ConditionDownloadController` — conditional download with device matching
-- [ ] Implement `ImmediatelyDownloadController` — priority download controller
-- [ ] Implement `HttpDownload` — HTTP download with chunking, resume, and retry support
-- [ ] Implement `FtpDownload` — FTP download support
-- [ ] Implement `DownloadThreadManager` and `ThreadHandle` — multi-threaded download management
-- [ ] Implement `DownloadTask` and `AbstractDownloadInfo` — download task state model
-- [ ] Implement `DownloadStatus` and `DownloadEventArgs` — status enums and progress notifications
-- [ ] Implement `SaveDownloadInfo2Json` — download progress persistence for resume
-- [ ] Implement `SysSleepManagement` — prevent system sleep during downloads
+### 1.5 Business Models (`.Model` sub-namespace)
+- [ ] `BehaviorModel`, `BusinessData`, `BusinessModel`, `BusinessStatus`, `BusinessType`
 
-### 7. Update and Version Checking (`lenovo.mbg.service.framework.updateversion`)
-- [ ] Implement `IVersionCheck` / `IVersionCheckV1` interfaces — version check contract
-- [ ] Implement `VersionCheckV1Impl` — version check with server communication
-- [ ] Implement `VersionDataV1Impl` — version data retrieval and parsing
-- [ ] Implement `VersionDownloadV1Impl` — update download logic
-- [ ] Implement `VersionInstallV1FullImpl` — full update installation
-- [ ] Implement `VersionInstallV1IncrementImpl` — incremental update installation
-- [ ] Implement `UpdateVersionAutoPush` and `UpdateWoker` — auto-update push mechanism
-- [ ] Implement `VersionModel` — version data model and comparison
+### 1.6 ADB Service Interface
+- [ ] `IAdbService` (in `.Adb` sub-namespace)
 
 ---
 
-## Device Management Features
+## Phase 2: Common Libraries
 
-### 8. ADB Operations
-- [ ] Implement device detection and enumeration
-- [ ] Create install package functionality (with reinstall support)
-- [ ] Create uninstall package functionality
-- [ ] Implement file push operations (with SyncService)
-- [ ] Implement file pull operations
-- [ ] Create shell command execution wrapper
-- [ ] Implement reboot commands (normal, bootloader, recovery, EDL)
-- [ ] Create device property reader (getprop)
-- [ ] Implement package manager interface
+### 2.1 Common Utilities (`LMSA.Common.Utilities`) — 63 .cs files
+- [ ] `ProcessRunner` — `ProcessString()`, `ProcessList()` with timeout
+- [ ] `Configurations` — Path constants for adb.exe, fastboot.exe, log dirs
+- [ ] `FileHelper`, `CustomFile`, `ReadWriteFile`
+- [ ] `SevenZipHelper` — 7-Zip archive handling
+- [ ] `JsonHelper`, `XmlSerializeHelper`
+- [ ] `HardwareHelper`, `HardwareEnum`, `DriversHelper`
+- [ ] `NetworkCheckHelper`, `WebView2Helper`, `WebBrowserHelper`
+- [ ] `AsyncTaskRunner`, `AsyncTaskContext`, `AsyncTaskResult`
+- [ ] `Security`, `ContainerManager`, `SysConfig`, `GlobalFun`
+- [ ] All remaining utility classes
 
-### 9. Fastboot Operations
-- [ ] Implement fastboot device detection
-- [ ] Create flash partition command (with 5-minute timeout)
-- [ ] Create erase partition command (userdata, metadata)
-- [ ] Create format partition command
-- [ ] Implement flashall operation (with XML configuration)
-- [ ] Create getvar command (all, specific variables)
-- [ ] Implement OEM commands (read_sv, partition, partition dump logfs)
-- [ ] Create reboot commands (normal, bootloader)
-- [ ] Implement continue command
-- [ ] Add anti-rollback protection detection
+### 2.2 Common Logging (`LMSA.Common.Log`) — 12 .cs files
+- [ ] `LogHelper`, `BusinessLog`, `LogLevel`
+- [ ] `LogEncrypt` / `LogDecrypt` — AES-encrypted logs
+- [ ] `LoggingEventFactory`
 
-### 10. Device Information Retrieval
-- [ ] Implement property loader for device information
-- [ ] Create ReadPropertiesInFastboot for fastboot mode
-- [ ] Implement device variable parser
-- [ ] Create secure version reader (oem read_sv)
-- [ ] Implement partition information reader
-- [ ] Create device model detection
-- [ ] Implement IMEI reader
-- [ ] Add Android version detection
+### 2.3 Common Web Services (`LMSA.Common.WebServices`) — 21 .cs files
+- [ ] `WebApiUrl`, `WebApiHttpRequest`, `WebApiContext`
+- [ ] `RsaWebClient`, `RsaHelper`, `HttpMethod`
+- [ ] API Services: `ApiBaseService`, `ApiService`, `RsaService`, `WarrantyService`
+- [ ] API Models: `BaseRequestModel`, `RequestModel`, `ResponseModel`, `RSAKey`, `ToolVersionModel`, `FlashedDevModel`, `OrderItem`, `RespOrders`, `PriceInfo`
+
+### 2.4 LMSA Common (`LMSA.Common`) — 25 .cs files
+- [ ] Exception/resource types: `ExceptionResultCodes`, `ResourceExecuteResult`, `ResourceTypeDefine`, `DiskSpaceNotEnoughExcpetion`
+- [ ] Form verification: `IFormVerify`, `PasswordVerify`, `EmailAddressVerify`, etc.
+- [ ] Form ViewModels, views, and converters
+- [ ] Import/Export: `AppDataTransferHelper`, `ImportAndExportWrapper`, `ProgressWindowWrapper`, `WorkTransferWindowWrapper`
 
 ---
 
-## Application Features (Plugins)
+## Phase 3: Device Management (`LMSA.Framework.DeviceManagement`) — 31 .cs files
 
-### 11. Phone Manager Plugin
-- [ ] Implement home screen UI
-- [ ] Create app list viewer
-- [ ] Implement app installation interface
-- [ ] Create app uninstallation interface
-- [ ] Implement file browser
-- [ ] Create file transfer UI (push/pull)
-- [ ] Add permission checking (Android 10+)
-- [ ] Implement activity manager commands (start, force-stop)
-
-### 12. Flash/Rescue Plugin
-- [ ] Create firmware flash wizard UI
-- [ ] Implement XML-based flash configuration parser
-- [ ] Create partition flashing interface
-- [ ] Implement progress tracking for flash operations
-- [ ] Add flash verification
-- [ ] Create error handling for flash failures
-- [ ] Implement anti-rollback check
-- [ ] Add device matching verification
-- [ ] Create multi-device flash support
-- [ ] Implement flash file validation
-
-### 13. Backup/Restore Plugin
-- [ ] Create backup wizard UI
-- [ ] Implement full backup functionality
-- [ ] Create selective backup (apps, data, settings)
-- [ ] Implement restore wizard
-- [ ] Create backup file validation
-- [ ] Add compression support
-- [ ] Implement backup encryption
-
-### 14. Data Transfer Plugin
-- [ ] Create device-to-device transfer UI
-- [ ] Implement contact transfer
-- [ ] Create photo/media transfer
-- [ ] Implement app transfer
-- [ ] Add transfer progress tracking
-- [ ] Create transfer verification
-
-### 15. Hardware Test Plugin
-- [ ] Implement screen test
-- [ ] Create touchscreen test
-- [ ] Implement button test
-- [ ] Create speaker/microphone test
-- [ ] Implement camera test
-- [ ] Create sensor test (accelerometer, gyroscope)
-- [ ] Implement battery test
-- [ ] Add test result reporting
-
-### 16. Toolbox Plugin
-- [ ] Implement screen recording functionality
-- [ ] Create screenshot tool
-- [ ] Implement network monitoring
-- [ ] Create log viewer
-- [ ] Add diagnostic information collector
-- [ ] Implement QR code generator
+- [ ] Connection monitors: `DeviceConnectionManagerEx`, `AdbConnectionMonitorEx`, `FBConnectionMonitorEx`, `WifiConnectionMonitorEx`
+- [ ] Device implementations: `AdbDeviceEx`, `FastbootDeviceEx`, `WifiDeviceEx`, `TcpAndroidDevice`
+- [ ] Device data: `DeviceDataEx`, `WifiDeviceData`, `DeviceReadConfig`
+- [ ] Operators: `AdbOperator`, `FastbootOperator`, `ProcessHelper`
+- [ ] Device info: `AndroidDeviceProperty`, `FastbootAndroidDevice`, `ILoadDeviceData`, `PropInfoLoader`, `ReadPropertiesInFastboot`
+- [ ] Events: `ICompositListener`, `IPhysicalConnectionListener`, `INetworkAdapterListener`
+- [ ] Infrastructure: `FileTransferManager`, `MessageManager`, `ConnectSteps`, `ConnectStepStatus`, `ConnectErrorCode`, `DevicemgtContantClass`
+- [ ] Event args: `PermissionsCheckConfirmEventArgs`, `TcpConnectStepChangedEventArgs`
 
 ---
 
-## User Interface
+## Phase 4: Smart Device / Flashing Engine (`LMSA.Framework.SmartDevice`) — 76 .cs files
 
-### 17. Main Window
-- [ ] Create main window layout (WPF/XAML)
-- [ ] Implement navigation system
-- [ ] Create device connection panel
-- [ ] Implement status bar
-- [ ] Add multi-language support
-- [ ] Create theme system (including dark mode via lenovo.themes.generic.dll)
+### 4.1 Core Recipe Framework
+- [ ] `Recipe`, `RecipeInfo`, `RecipeResources`
+- [ ] `UseCase`, `UseCaseRunner`, `UseCaseDevice`
+- [ ] `Result` — 43-value enum
+- [ ] `ResultLogger`, `StepInfo`, `StepHelper`
+- [ ] `IRecipeMessage`, `RecipeMessage`, `RecipeMessageType`
 
-### 18. Device Connection UI
-- [ ] Create device list view
-- [ ] Implement connection status indicators
-- [ ] Add device information display
-- [ ] Create manual connection option (IP address)
-- [ ] Implement device selection
+### 4.2 Step Classes (40+, all inherit BaseStep)
+- [ ] `BaseStep` — Abstract base
+- [ ] ADB Steps: `ADBConnect`, `WaitConnectByAdb`
+- [ ] Fastboot Steps: `FastbootFlash`, `FastbootFlashSinglepartition`, `FastbootShell`, `FastbootDeviceMatchCheck`, `FastbootMatchFlashFile`, `FastbootModifyFlashFile`, `WaitConnectByFastboot`, `WaitFastbootConnectUntilTimeout`, `ReadPropertiesInFastboot`
+- [ ] Shell Steps: `Shell`, `AndroidShell`, `AndroidShellVerify`, `ShellCmdStatus`, `ShellCmdType`, `CommandLine`, `CmdRunner`
+- [ ] Shell Response Parsers: `ShellResponse`, `ShellResponseFactory`, `ShellResponseCfcflash`, `ShellResponseCmdDloader`, `ShellResponseFlashtool`, `ShellResponseLXConsoleDownLoadTool`, `ShellResponseQdowloader`, `ShellResponseQfil`, `ShellResponseQsaharaserver`, `ShellResponseSpflashtool`, `ShellResponseUpgradetool`
+- [ ] Device Steps: `ReadDeviceMode`, `EraseUserData`, `Clear`, `CleanupFactoryMode`, `PushDirectory`
+- [ ] File Steps: `LoadFiles`, `CopyFiles`, `CopyLogs`, `RomFileCheck`, `BatFileVersionCheck`
+- [ ] Hardware Steps: `FindComPorts`, `FindLocationPort`, `FindPnpDevice`, `InstallDriver`
+- [ ] UI Steps: `InfoPrompt`, `InteractPrompt`, `Manual`
+- [ ] Misc Steps: `Sleep`, `ConnectSteps`, `ConnectStepInfo`, `RuntimeCheck`, `RunningTimeCheck`, `RunODMSocketServer`
 
-### 19. Wizard/Tutorial System
-- [ ] Create step-by-step wizard framework
-- [ ] Implement tutorial overlays
-- [ ] Add animated GIF tutorials (fastboot-guide-01.gif, etc.)
-- [ ] Create help documentation viewer
-- [ ] Implement FAQ system
-
----
-
-## Supporting Services
-
-### 20. Windows Service Component
-- [ ] Implement LmsaWindowsService.exe
-- [ ] Create service installer (InstallUtil64.exe)
-- [ ] Implement service uninstaller
-- [ ] Add service configuration management
-- [ ] Create inter-process communication (pipes)
-
-### 21. Update/Download System
-- [ ] Implement firmware download manager
-- [ ] Create download progress tracking
-- [ ] Add checksum verification
-- [ ] Implement resume capability for interrupted downloads
-- [ ] Create download configuration parser (download-config.xml)
-
-### 22. Network Features
-- [ ] Implement WebView2 integration for web content
-- [ ] Create WebSocket server (SuperWebSocket)
-- [ ] Implement socket communication
-- [ ] Add proxy support (proxychains integration)
-- [ ] Create web service client
+### 4.3 ODM Socket Server (8 classes)
+- [ ] `ODMServerMain`, `WebService`, `RestService`, `DataSigningODMService`
+- [ ] `Web`, `WebClientTimeout`, `Login`, `Convert`
 
 ---
 
-## Configuration Management
+## Phase 5: Download & Update Frameworks
 
-### 23. Configuration System
-- [ ] Create XML configuration parser
-- [ ] Implement plugin configuration (plugins.xml)
-- [ ] Add log4net configuration support
-- [ ] Create download configuration
-- [ ] Implement language pack management (lang folder)
+### 5.1 Download Framework (`LMSA.Framework.Download`) — 24 .cs files
+- [ ] Controllers: `AbstractDownloadController`, `GeneralDownloadController`, `ConditionDownloadController`, `ImmediatelyDownloadController`
+- [ ] `IDownloadCondition`, `DownloadWorker`, `DownloadTaskProcessor`
+- [ ] `SysSleepManagement`
+- [ ] All download info, status, and event classes
 
-### 24. Plugin Architecture
-- [ ] Create plugin loader/unloader
-- [ ] Implement plugin lifecycle management
-- [ ] Add plugin GUID management
-- [ ] Create plugin dependency resolver
-- [ ] Implement plugin communication interface
+### 5.2 Update Version (`LMSA.Framework.UpdateVersion`) — 34 .cs files
+- [ ] Interfaces (11): `IVersionCheck`, `IVersionCheckV1`, `IVersionData`, `IVersionDataCheck`, `IVersionDataV1`, `IVersionDownload`, `IVersionDownloadV1`, `IVersionInstall`, `IVersionInstallV1`, `IVersionEvent`, `IVersionUnInstall`
+- [ ] Models (11): `CheckVersionEventArgs`, `CheckVersionStatus`, `DownloadStatusChangedArgs`, `VersionDownloadStatus`, etc.
+- [ ] Implementations: `UpdateVersionAutoPush`, `UpdateWoker`, `UpdateWorkV1`
 
 ---
 
-## Security Features
+## Phase 6: Supporting Frameworks
 
-### 25. Security Implementation
-- [ ] Implement anti-rollback protection verification
-- [ ] Create secure version checking
-- [ ] Add permission validation (Android 10+)
-- [ ] Implement cryptographic operations (BouncyCastle)
-- [ ] Create secure logging (avoid logging sensitive data)
+### 6.1 Host Controller (`LMSA.Framework.HostController`) — 6 files
+- [ ] `PluginController`, `PluginContainer`, `PluginViewOfHost`, `Plugin`, `PluginErrorEventArgs`
 
----
+### 6.2 Language (`LMSA.Framework.Language`) — 12 files
+- [ ] `Lang`, `LangLabel`, `LangButton`, `LangRadioButton`, `LangTextBlock`, `LangToolTip`, `LangTranslation`
 
-## Error Handling and Recovery
+### 6.3 Pipes (`LMSA.Framework.Pipes`) — 6 files
+- [ ] `BasicPipe`, `ServerPipe`, `ClientPipe`, `PipeMessage`, `PipeEventArgs`
 
-### 26. Error Management
-- [ ] Create centralized error handler
-- [ ] Implement error pattern detection ("error", "fail", anti-rollback)
-- [ ] Add exit code monitoring
-- [ ] Create user-friendly error messages
-- [ ] Implement error logging
-- [ ] Add automatic retry logic with configurable attempts
+### 6.4 Socket (`LMSA.Framework.Socket`) — 40 files
+- [ ] File transfer, message protocol, RSA security, heartbeat, JSON endpoints
 
-### 27. Device Status Monitoring
-- [ ] Implement WMI device status checking
-- [ ] Create USB device monitoring
-- [ ] Add device disconnection detection
-- [ ] Implement connection timeout handling
-- [ ] Create device state change notifications
+### 6.5 Resources (`LMSA.Framework.Resources`) — 8 files
+- [ ] `Rsd`, `FileDownloadManagerV6`, `DownloadWorker`, `DownloadInfoToJson`, `SysSleepManagement`
+
+### 6.6 Smart Base (`LMSA.Framework.SmartBase`) — 3 files
+- [ ] Base classes for smart device features
+
+### 6.7 Host Proxy (`LMSA.HostProxy`) — 3 files
+- [ ] `HostProxy` — Host integration proxy
 
 ---
 
-## Analytics and Telemetry
+## Phase 7: Main Application (`LMSA.App`) — 170+ .cs files
 
-### 28. Analytics Integration
-- [ ] Implement Google Analytics tracking
-- [ ] Create usage statistics collection
-- [ ] Add feature usage tracking
-- [ ] Implement error reporting
-- [ ] Create anonymous telemetry
+### 7.1 Application Core
+- [ ] `App` / `ApplcationClass`, `AppContext`, `MainWindow`
+- [ ] `SingleInstance` / `ISingleInstanceApp`, `SplashScreenWindow`, `ClosingWindow`
+- [ ] `NativeMethods`, `WM`
+
+### 7.2 ViewModels
+- [ ] `MainWindowViewModel`, `DeviceConnectViewModel`, `DeviceViewModel`
+- [ ] `LanguageSelectViewModel`, `NewVersionViewModel`, `PrivacyPopViewModel`
+- [ ] `SurveyWindowV2ViewModel`, `ViewModelBase`, `ModelBase`
+- [ ] `DownloadControlViewModel`, `CouponWindowModel`
+- [ ] All remaining ViewModels
+
+### 7.3 Views (V6 generation)
+- [ ] `DevConnectView`, `DeviceConnectView`, `HostUpdateWindowV6`
+- [ ] `MessageBoxV6`, `ContentMessageBox`, `PicMessageBox`, `RightPicMessageBox`
+- [ ] `LanguageSelectViewV6`, `InstallMADialogV6`, `NoticeManagementViewV6`
+- [ ] `DebugPermissionWindow`, `B2BPurchaseOverviewV6`, `RegisterDevView`
+- [ ] `CouponWindow`, `ExistsSpacePathView`
+
+### 7.4 Login System
+- [ ] Business: `UserService`, `PermissionService`, `LoginHandlerFacory`, `LmsaUserLogin`, `LenovoIdUserLogin`, `GuestLogin`
+- [ ] Protocol: All login/register/logout protocol models
+- [ ] Views and ViewModels
+
+### 7.5 Feedback, Update Version, Resources Cleanup Systems
+- [ ] All business, model, view, and ViewModel classes for each subsystem
+
+### 7.6 Services
+- [ ] `ConfigService`, `GoogleAnalyticsTracker`, `PermissionService`
+- [ ] `PipeClientService`, `ResourcesLoggingService`, `User`, `UserBehaviorService`
+
+### 7.7 Business Logic
+- [ ] `PluginCatalog`, `PluginCatalogInfo`, `PluginCatalogPlugin`, `XmlPluginData`
+- [ ] `DeviceDataCollection`, `DeviceModel`, `UserDeviceModel`
+- [ ] `MainWindowControl`, `MenuPopupWindowBusiness`
+- [ ] All remaining business classes
+
+### 7.8 Custom Controls & Converters
+- [ ] All WPF custom controls and value converters
 
 ---
 
-## Additional Features
+## Phase 8: Plugins
 
-### 29. Messaging and Support
-- [ ] Implement in-app messaging system
-- [ ] Create forum integration
-- [ ] Add tips and tricks viewer
-- [ ] Implement support ticket system
-- [ ] Create feedback submission
+### 8.1 Flash/Rescue (`LMSA.Plugins.Flash`) — 263 files, GUID `8ab04aa9...`
+- [ ] All 263 classes from decompiled source
 
-### 30. Utilities
-- [ ] Implement 7-Zip integration for archives
-- [ ] Create Protocol Buffers serialization
-- [ ] Add JSON configuration management
-- [ ] Implement SVG rendering (SharpVectors)
-- [ ] Create QR code generation
-- [ ] Add audio processing capabilities (NAudio)
+### 8.2 Phone Manager (`LMSA.Plugins.PhoneManager`) — 1675 files, GUID `02928af0...`
+- [ ] All 1675 classes including `.common` and `.apps` sub-assemblies
 
----
+### 8.3 Backup & Restore (`LMSA.Plugins.BackupRestore`) — 108 files, GUID `13f79fe4...`
+- [ ] All 108 classes from decompiled source
 
-## Testing Infrastructure
+### 8.4 Data Transfer (`LMSA.Plugins.DataTransfer`) — 11 files, GUID `d8042f96...`
+- [ ] All 11 classes from decompiled source
 
-### 31. Testing
-- [ ] Create unit tests for core operations
-- [ ] Implement integration tests for device communication
-- [ ] Add mock device for testing
-- [ ] Create test fixtures for flash operations
-- [ ] Implement automated test suite
+### 8.5 Hardware Test (`LMSA.Plugins.HardwareTest`) — 17 files, GUID `985c66ac...`
+- [ ] All 17 classes from decompiled source
+
+### 8.6 Toolbox (`LMSA.Plugins.Toolbox`) — 1276 files, GUID `dd537b5c...`
+- [ ] All 1276 classes including SuperSocket/SuperWebSocket, NAudio, FFmpeg
+
+### 8.7 Support (`LMSA.Plugins.Support`) — 67 files, GUID `a6099126...`
+- [ ] All 67 classes: forum, messenger, support, tips
 
 ---
 
-## Documentation
+## Phase 9: Windows Service (`LMSA.WindowsService`) — 7 files
+- [ ] `LmsaService`, `Program`, `ProjectInstaller`
+- [ ] `TaskManager`, `TaskScheduler`, `TaskWorker`, `PipeWorkerFactory`
 
-### 32. Documentation Tasks
-- [ ] Create API documentation
-- [ ] Write user manual
-- [ ] Create developer guide
-- [ ] Document plugin development
-- [ ] Add troubleshooting guide
+---
+
+## Phase 10: Themes (`LMSA.Themes`)
+- [ ] WPF styles, templates, resource dictionaries from `lenovo.themes.generic`
+
+---
+
+## Phase 11: Testing
+- [ ] Unit tests for all framework libraries
+- [ ] Unit tests for device management (mock ADB/Fastboot)
+- [ ] Unit tests for smart device engine (Recipe, Steps, Result)
+- [ ] Unit tests for common utilities
+- [ ] Unit tests for web services
+- [ ] Integration tests for download and device monitoring
+
+---
+
+## Phase 12: Deployment
+- [ ] Reproduce `plugins.xml` with correct GUID mapping (copy from original)
+- [ ] Include all config files from original
+- [ ] Create MSI installer
+- [ ] Include adb.exe, fastboot.exe, fastbootmonitor.exe
 
 ---
 
 ## Priority Recommendations
 
-### Highest Priority (Reverse Engineering Analysis)
-1. **Complete all Phase 0.5 RE analysis tasks before writing implementation code**
-2. Web services analysis (RE-1) — understand API communication patterns
-3. API service models analysis (RE-2) — understand request/response structures
-4. Authentication and encryption analysis (RE-4) — understand security model
-5. Download framework analysis (RE-3) — understand firmware download flow
+### Highest Priority (Foundation — create from scratch)
+1. **Phase 0**: Create entire project structure from zero
+2. **Phase 1**: Core service interfaces
+3. **Phase 2.1**: Common utilities (ProcessRunner, Configurations)
+4. **Phase 3**: Device management framework
 
-### High Priority (Core Functionality)
-1. Device communication layer (ADB/Fastboot wrappers)
-2. Process execution framework
-3. Web services layer (API communication)
-4. Authentication and encryption layer (RSA, BouncyCastle)
-5. Software download framework
-6. Flash/rescue operations
-7. Device information retrieval
-8. Error handling
+### High Priority (Core Features)
+5. Phase 4: Smart device / flashing engine
+6. Phase 2.3: Web services
+7. Phase 5: Download & update frameworks
+8. Phase 8.1: Flash/Rescue plugin
 
 ### Medium Priority (User Features)
-1. Phone manager plugin
-2. Backup/restore plugin
-3. Main window UI
-4. Configuration management
-5. Plugin architecture
-6. Update/version checking
+9. Phase 7: Main WPF application
+10. Phase 8.2: Phone Manager plugin
+11. Phase 8.3: Backup/Restore plugin
+12. Phase 6: Supporting frameworks
 
-### Low Priority (Additional Features)
-1. Hardware test plugin
-2. Messaging and support
-3. Analytics integration
-4. Toolbox utilities
-5. Advanced features
-
----
-
-## Implementation Notes
-
-- **Technology Stack**: C# .NET 8 / .NET Framework 4.7.2, WPF for UI
-- **Key Libraries**: SharpAdbClient, Newtonsoft.Json, log4net, BouncyCastle
-- **Architecture**: Plugin-based modular design matching original LMSA structure
-- **Reference**: All decompiled `.cs` files in `decompiled/reference-src/` are the ground truth
-- **Device Support**: Lenovo and Motorola Android devices
-- **Deployment**: Windows desktop application with optional Windows service
+### Lower Priority
+13. Phase 8.4-8.7: Remaining plugins
+14. Phase 9-12: Service, themes, testing, deployment
 
 ---
 
 ## Estimated Complexity
 
-- **Total Tasks**: 32+ major feature areas (plus Phase 0 decompilation setup and Phase 0.5 reverse engineering)
-- **Reverse Engineering Tasks**: 60+ individual analysis items across 7 categories
-- **Sub-tasks**: 200+ individual implementation items
-- **Complexity**: High (device communication, multi-threading, plugin system, encryption, API services)
-- **Testing Requirements**: Extensive (requires physical device testing for integration)
+- **Total LMSA Projects to create from scratch**: 26
+- **Total .cs Files to reimplement**: ~8,120
+- **Lenovo Custom Code**: ~3,200+ .cs files
+- **Plugin Code**: ~3,400+ .cs files
+- **Main App Code**: ~170+ .cs files
+- **Config files to preserve**: 5 XML/config files from original
 
 ---
 
 **Last Updated**: February 20, 2026
-**Source**: Recursively decompiled from LMSA Software Fix.exe and all associated DLLs using ilspycmd
+**Source**: Recursively decompiled from LMSA Software Fix.exe v7.4.3.4 and all associated DLLs
