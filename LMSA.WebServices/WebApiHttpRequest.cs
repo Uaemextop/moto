@@ -23,7 +23,7 @@ public class WebApiHttpRequest
         HttpWebRequest httpWebRequest = null;
         try
         {
-            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
+            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls13;
             ServicePointManager.DefaultConnectionLimit = 200;
             LogHelper.LogInstance.Debug("Request " + url + ", params: " + body);
             httpWebRequest = (HttpWebRequest)WebRequest.Create(url);

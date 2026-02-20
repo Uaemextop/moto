@@ -100,7 +100,7 @@ Before implementing any feature, perform a detailed reverse engineering analysis
 ### 1. Device Communication Layer
 - [x] Implement ADB client wrapper using SharpAdbClient library
 - [x] Implement Fastboot client wrapper for device communication
-- [ ] Create device connection monitoring service (ADB and Fastboot)
+- [x] Create device connection monitoring service (ADB and Fastboot)
 - [x] Implement device state management (Offline, Online, Fastboot, Recovery, EDL)
 - [ ] Create TCP/IP device connection support
 - [x] Implement port forwarding functionality (CreateForward, RemoveForward, RemoveAllForwards)
@@ -110,8 +110,8 @@ Before implementing any feature, perform a detailed reverse engineering analysis
 - [x] Create ProcessString method for command execution with string output
 - [x] Create ProcessList method for command execution with line-by-line output
 - [x] Implement command encapsulation for device-specific operations
-- [ ] Add retry logic for failed commands
-- [ ] Implement process killing functionality (adb, fastboot)
+- [x] Add retry logic for failed commands
+- [x] Implement process killing functionality (adb, fastboot)
 
 ### 3. Logging System
 - [x] Implement log4net-based logging framework
@@ -121,21 +121,21 @@ Before implementing any feature, perform a detailed reverse engineering analysis
 - [x] Create result tracking (PASSED, FAILED, QUIT)
 
 ### 4. Web Services Layer (`lenovo.mbg.service.common.webservices`)
-- [ ] Implement `WebApiUrl` — API URL management with base URLs, endpoint paths, and environment switching
-- [ ] Implement `WebApiHttpRequest` — HTTP request builder with headers, content types, timeout, and error handling
-- [ ] Implement `WebApiContext` — API context with session management and configuration
-- [ ] Implement `HttpMethod` enum — supported HTTP methods
-- [ ] Implement `ApiBaseService` — base service class for API communication
-- [ ] Implement `ApiService` — main API service with device registration, firmware queries, and reporting
-- [ ] Implement `WarrantyService` — warranty check API integration
-- [ ] Implement web API request/response models (`BaseRequestModel`, `RequestModel`, `ResponseModel`)
-- [ ] Implement API data models (`ToolVersionModel`, `FlashedDevModel`, `OrderItem`, `RespOrders`, `PriceInfo`)
+- [x] Implement `WebApiUrl` — API URL management with base URLs, endpoint paths, and environment switching
+- [x] Implement `WebApiHttpRequest` — HTTP request builder with headers, content types, timeout, and error handling
+- [x] Implement `WebApiContext` — API context with session management and configuration
+- [x] Implement `HttpMethod` enum — supported HTTP methods
+- [x] Implement `ApiBaseService` — base service class for API communication
+- [x] Implement `ApiService` — main API service with device registration, firmware queries, and reporting
+- [x] Implement `WarrantyService` — warranty check API integration
+- [x] Implement web API request/response models (`BaseRequestModel`, `RequestModel`, `ResponseModel`)
+- [x] Implement API data models (`ToolVersionModel`, `FlashedDevModel`, `OrderItem`, `RespOrders`, `PriceInfo`)
 
 ### 5. Authentication and Encryption Layer
-- [ ] Implement `RsaHelper` — RSA encryption/decryption utilities using BouncyCastle
-- [ ] Implement `RsaWebClient` — RSA-authenticated HTTP client (request signing, response verification)
-- [ ] Implement `RsaService` — RSA key exchange service for backend key negotiation
-- [ ] Implement `RSAKey` model — RSA key storage and serialization
+- [x] Implement `RsaHelper` — RSA encryption/decryption utilities using BouncyCastle
+- [x] Implement `RsaWebClient` — RSA-authenticated HTTP client (request signing, response verification)
+- [x] Implement `RsaService` — RSA key exchange service for backend key negotiation
+- [x] Implement `RSAKey` model — RSA key storage and serialization
 - [ ] Implement secure API request construction with auth tokens and device identifiers
 
 ### 6. Software Download Framework (`lenovo.mbg.service.framework.download`)
@@ -191,8 +191,8 @@ Before implementing any feature, perform a detailed reverse engineering analysis
 
 ### 10. Device Information Retrieval
 - [x] Implement property loader for device information
-- [ ] Create ReadPropertiesInFastboot for fastboot mode
-- [ ] Implement device variable parser
+- [x] Create ReadPropertiesInFastboot for fastboot mode
+- [x] Implement device variable parser
 - [ ] Create secure version reader (oem read_sv)
 - [ ] Implement partition information reader
 - [x] Create device model detection
