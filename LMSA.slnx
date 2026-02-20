@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="LMSA.Tests/LMSA.Tests.csproj" />
+  <Project Path="LMSA.WebServices/LMSA.WebServices.csproj" />
+</Solution>
