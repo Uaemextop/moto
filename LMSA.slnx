@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="LMSA.DeviceManagement/LMSA.DeviceManagement.csproj" />
+  <Project Path="LMSA.Tests/LMSA.Tests.csproj" />
+</Solution>
