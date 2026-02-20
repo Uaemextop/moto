@@ -18,12 +18,14 @@ mcp-servers:
       - "@modelcontextprotocol/server-filesystem"
       - "/home/runner/work/moto/moto/decompiled"
       - "/home/runner/work/moto/moto"
+    tools: ["*"]
     description: Access to decompiled reference sources and implementation code
   github:
     command: npx
     args:
       - "-y"
       - "@modelcontextprotocol/server-github"
+    tools: ["*"],
     env:
       GITHUB_PERSONAL_ACCESS_TOKEN: "{{GITHUB_TOKEN}}"
     description: GitHub repository operations and issue tracking
