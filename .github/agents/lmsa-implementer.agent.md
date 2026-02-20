@@ -59,14 +59,19 @@ The goal is to produce a clean, open-source C# codebase that faithfully reproduc
 **Automated implementation loop — run this workflow continuously:**
 1. Use the **sequential-thinking** MCP server to reason through the next task before writing code
 2. Read `IMPLEMENTATION_TASKLIST.md` to identify the next unchecked `[ ]` task (highest priority first)
-3. Use the **memory** MCP server to recall any previously stored patterns or context for that area
-4. Use the **filesystem** MCP server to browse `decompiled/reference-src/` and find the relevant decompiled classes
-5. Write production C# code in the appropriate `LMSA.*` project directory, faithfully matching the decompiled logic
-6. Write unit tests covering the new code
-7. Build with `dotnet build LMSA.sln` and run tests with `dotnet test LMSA.Tests/LMSA.Tests.csproj`
-8. Store key implementation patterns in **memory** MCP for reuse
-9. Mark the task complete in `IMPLEMENTATION_TASKLIST.md` with `[x]`
-10. **Immediately proceed to the next unchecked task** — do not stop between tasks
+3. **Check if the project structure is initialized** (solution file, .csproj files exist). If not, create the necessary projects using `dotnet new` commands. If already initialized, skip this step.
+4. Use the **memory** MCP server to recall any previously stored patterns or context for that area
+5. **Reverse engineering analysis (mandatory before implementation)**:
+   - Use the **filesystem** MCP server to browse `decompiled/reference-src/` and find the relevant decompiled classes for the current task
+   - Analyze the decompiled code: identify all classes, interfaces, enums, method signatures, data flow, and dependencies
+   - Document the key patterns, algorithms, and logic discovered
+6. **Review existing open-source project code**: Read the current `LMSA.*` project sources to understand what has already been implemented and avoid duplication
+7. **Implement**: Write production C# code in the appropriate `LMSA.*` project directory, faithfully reproducing the decompiled logic
+8. Write unit tests covering the new code
+9. Build with `dotnet build` and run tests with `dotnet test`
+10. Store key implementation patterns in **memory** MCP for reuse
+11. Mark the task complete in `IMPLEMENTATION_TASKLIST.md` with `[x]`
+12. **Immediately proceed to the next unchecked task** — do not stop between tasks
 
 ## Technology Stack
 
@@ -176,16 +181,18 @@ public class FeatureViewModel : BaseViewModel
 
 ## What You Must Do
 
-1. **Read the task list**: Start by reading `IMPLEMENTATION_TASKLIST.md`
-2. **Use sequential-thinking MCP**: Reason through the approach before writing code
-3. **Pick next task**: Find the next unchecked task in priority order
-4. **Check memory MCP**: Recall any stored patterns relevant to this task
-5. **Research context**: Browse `decompiled/reference-src/` via filesystem MCP to find relevant decompiled classes
-6. **Implement feature**: Create the C# implementation that faithfully reproduces the decompiled logic
-7. **Add tests**: Create unit tests for core functionality
-8. **Update memory MCP**: Store key patterns for future reference
-9. **Update task list**: Mark the task as complete with `[x]`
-10. **Continue immediately**: Move to the next unchecked task without stopping
+1. **Check project structure**: Verify that the solution file and project directories exist. If not, initialize them with `dotnet new` commands (classlib, xunit, etc.). If already initialized, skip this step.
+2. **Read the task list**: Start by reading `IMPLEMENTATION_TASKLIST.md`
+3. **Use sequential-thinking MCP**: Reason through the approach before writing code
+4. **Pick next task**: Find the next unchecked task in priority order
+5. **Check memory MCP**: Recall any stored patterns relevant to this task
+6. **Reverse engineering analysis (mandatory)**: Before implementing any feature, browse `decompiled/reference-src/` via filesystem MCP to find and analyze the relevant decompiled classes — identify classes, interfaces, enums, method signatures, data flow, and dependencies
+7. **Review existing code**: Read the current `LMSA.*` project sources to understand what has already been implemented
+8. **Implement feature**: Create the C# implementation that faithfully reproduces the decompiled logic
+9. **Add tests**: Create unit tests for core functionality
+10. **Update memory MCP**: Store key patterns for future reference
+11. **Update task list**: Mark the task as complete with `[x]`
+12. **Continue immediately**: Move to the next unchecked task without stopping
 
 ## What You Must NOT Do
 
@@ -303,8 +310,11 @@ public async Task FlashManager_FlashPartition_CompletesSuccessfully()
 Build and test your production code:
 
 ```bash
+# Find the solution file (may be .sln or .slnx)
+SLN=$(ls *.sln *.slnx 2>/dev/null | head -1)
+
 # Build the solution
-dotnet build LMSA.sln
+dotnet build "$SLN"
 
 # Run tests
 dotnet test LMSA.Tests/LMSA.Tests.csproj
@@ -313,10 +323,18 @@ dotnet test LMSA.Tests/LMSA.Tests.csproj
 dotnet test LMSA.Tests/LMSA.Tests.csproj --collect:"XPlat Code Coverage"
 
 # Format code
-dotnet format LMSA.sln
+dotnet format "$SLN"
 
 # Build specific project
 dotnet build LMSA.DeviceManagement/LMSA.DeviceManagement.csproj
+
+# Initialize project structure (only if not already initialized)
+# Check first: ls *.sln *.slnx 2>/dev/null
+# If no solution file exists, create one:
+dotnet new sln -n LMSA
+dotnet new classlib -n LMSA.Core -f net8.0
+dotnet sln add LMSA.Core/LMSA.Core.csproj
+# ... repeat for other projects
 ```
 
 ## MCP Tools Workflow

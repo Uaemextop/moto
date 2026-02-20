@@ -7,11 +7,15 @@ This task list tracks the complete reimplementation of the Lenovo Mobile Softwar
 
 **Implementation Approach**:
 1. CI workflow recursively decompiles all .NET DLLs and EXEs from `decompiled/reference/` using `ilspycmd`
-2. Study decompiled output in `decompiled/reference-src/` for exact class structure and logic
-3. Implement clean, open-source C# code in `LMSA.*` project directories
-4. Write comprehensive tests for all features
-5. Build and verify each component works correctly
-6. Mark tasks complete with `[x]` only after verification
+2. **Before implementing any feature**, perform a reverse engineering analysis of the relevant decompiled DLLs/EXEs in `decompiled/reference-src/`:
+   - Identify all classes, interfaces, enums, and their relationships
+   - Document the internal logic, data flow, and dependencies
+   - Map decompiled namespaces to `LMSA.*` project targets
+3. Review the current open-source project code to understand existing implementations and avoid duplication
+4. Implement clean, open-source C# code in `LMSA.*` project directories, faithfully reproducing the decompiled logic
+5. Write comprehensive tests for all features
+6. Build and verify each component works correctly
+7. Mark tasks complete with `[x]` only after verification
 
 ---
 
@@ -21,6 +25,73 @@ This task list tracks the complete reimplementation of the Lenovo Mobile Softwar
 - [ ] Confirm CI workflow has recursively decompiled all DLLs and EXEs to `decompiled/reference-src/`
 - [ ] Catalog all decompiled namespaces and top-level classes in `decompiled/reference-src/`
 - [ ] Map decompiled assembly structure to `LMSA.*` project directories
+
+---
+
+## Phase 0.5: Reverse Engineering Analysis of Decompiled Binaries
+
+Before implementing any feature, perform a detailed reverse engineering analysis of the relevant decompiled DLLs and EXEs. Each analysis task must be completed before writing the corresponding implementation code.
+
+### RE-1. Web Services Analysis (`lenovo.mbg.service.common.webservices`)
+- [ ] Analyze `WebApiUrl.cs` — identify all API base URLs, endpoint paths, and environment switching logic
+- [ ] Analyze `WebApiHttpRequest.cs` — document HTTP request construction, headers, content types, and error handling
+- [ ] Analyze `WebApiContext.cs` — map the web API context lifecycle, session management, and configuration
+- [ ] Analyze `RsaWebClient.cs` — document RSA-encrypted HTTP client flow (request signing, response verification)
+- [ ] Analyze `HttpMethod.cs` — catalog all supported HTTP methods and their usage patterns
+- [ ] Analyze `ApiBaseService.cs` and `ApiService.cs` — document the service layer pattern for API calls
+- [ ] Analyze `WarrantyService.cs` — document warranty check API calls, request/response models
+- [ ] Analyze `RsaService.cs` — document RSA key exchange service flow with the backend
+
+### RE-2. API Service Models Analysis (`lenovo.mbg.service.common.webservices.WebApiModel`)
+- [ ] Analyze `BaseRequestModel.cs` and `RequestModel.cs` — document the base request structure (headers, auth tokens, device identifiers)
+- [ ] Analyze `ResponseModel.cs` — document the standard response envelope (status codes, error messages, data payload)
+- [ ] Analyze `RSAKey.cs` — document RSA key model structure (public/private key format, key exchange protocol)
+- [ ] Analyze `ToolVersionModel.cs` — document tool version checking model and update mechanism
+- [ ] Analyze `FlashedDevModel.cs` — document flashed device reporting model (what data is sent to the server)
+- [ ] Analyze `OrderItem.cs`, `RespOrders.cs`, `PriceInfo.cs` — document order/pricing API models
+
+### RE-3. Software Download Framework Analysis (`lenovo.mbg.service.framework.download`)
+- [ ] Analyze `DownloadWorker.cs` and `DownloadTaskProcessor.cs` — document the download orchestration logic
+- [ ] Analyze `AbstractDownloadController.cs` — document the download controller base class and lifecycle
+- [ ] Analyze `GeneralDownloadController.cs` — document general (firmware) download flow
+- [ ] Analyze `ConditionDownloadController.cs` — document conditional download logic (device matching, version checks)
+- [ ] Analyze `ImmediatelyDownloadController.cs` — document immediate (priority) download flow
+- [ ] Analyze `HttpDownload.cs` and `FtpDownload.cs` — document HTTP/FTP download implementations (chunking, resume, retry)
+- [ ] Analyze `DownloadThreadManager.cs` and `ThreadHandle.cs` — document multi-threaded download management
+- [ ] Analyze `DownloadTask.cs` and `AbstractDownloadInfo.cs` — document download task model and state tracking
+- [ ] Analyze `DownloadStatus.cs` and `DownloadEventArgs.cs` — document download status enums and event notification
+- [ ] Analyze `SaveDownloadInfo2Json.cs` — document download progress persistence for resume capability
+- [ ] Analyze `SysSleepManagement.cs` — document system sleep prevention during downloads
+
+### RE-4. Authentication and RSA Encryption Analysis
+- [ ] Analyze `RsaHelper.cs` (in webservices) — document RSA encryption/decryption helper methods, key generation, padding
+- [ ] Analyze `RsaWebClient.cs` — document how RSA is used to sign API requests and verify responses
+- [ ] Analyze `RsaService.cs` — document RSA key negotiation protocol with the Lenovo backend
+- [ ] Analyze `RSAKey.cs` model — document key storage format and serialization
+- [ ] Analyze BouncyCastle usage patterns — identify which BouncyCastle crypto algorithms are used across the codebase
+- [ ] Cross-reference `WebApiHttpRequest.cs` auth headers — document how authentication tokens are constructed and attached
+
+### RE-5. Update and Version Checking Analysis (`lenovo.mbg.service.framework.updateversion`)
+- [ ] Analyze `IVersionCheck.cs` and `IVersionCheckV1.cs` — document version check interfaces
+- [ ] Analyze `VersionCheckV1Impl.cs` — document version check implementation (server communication, version comparison)
+- [ ] Analyze `VersionDataV1Impl.cs` — document version data retrieval and parsing
+- [ ] Analyze `VersionDownloadV1Impl.cs` — document update download logic
+- [ ] Analyze `VersionInstallV1FullImpl.cs` and `VersionInstallV1IncrementImpl.cs` — document full/incremental update installation
+- [ ] Analyze `UpdateVersionAutoPush.cs` and `UpdateWoker.cs` — document auto-update push mechanism
+- [ ] Analyze `VersionModel.cs` — document version data model and comparison logic
+
+### RE-6. Socket and Network Communication Analysis (`lenovo.mbg.service.framework.socket`)
+- [ ] Analyze socket framework classes — document WebSocket server setup and message protocol
+- [ ] Analyze inter-process communication via sockets — document message format and handlers
+- [ ] Cross-reference SuperSocket/SuperWebSocket usage in plugins — document real-time communication patterns
+
+### RE-7. Service Framework and Plugin Interfaces Analysis (`lenovo.mbg.service.framework.services`)
+- [ ] Analyze `IPlugin.cs` — document plugin interface contract and lifecycle methods
+- [ ] Analyze `IHostOperationService.cs` — document host-to-plugin operation service interface
+- [ ] Analyze `IGoogleAnalyticsTracker.cs` — document analytics tracking interface
+- [ ] Analyze `IFileDownload.cs` and `ISaveDownloadInfo.cs` — document download service interfaces
+- [ ] Analyze `DownloadInfo.cs` and `DownloadStatus.cs` — document download info model used by services layer
+- [ ] Analyze `BusinessModel.cs`, `BusinessData.cs`, `BusinessType.cs` — document business logic models and types
 
 ---
 
@@ -49,11 +120,53 @@ This task list tracks the complete reimplementation of the Lenovo Mobile Softwar
 - [ ] Add upload capability for diagnostic logs
 - [ ] Create result tracking (PASSED, FAILED, QUIT)
 
+### 4. Web Services Layer (`lenovo.mbg.service.common.webservices`)
+- [ ] Implement `WebApiUrl` — API URL management with base URLs, endpoint paths, and environment switching
+- [ ] Implement `WebApiHttpRequest` — HTTP request builder with headers, content types, timeout, and error handling
+- [ ] Implement `WebApiContext` — API context with session management and configuration
+- [ ] Implement `HttpMethod` enum — supported HTTP methods
+- [ ] Implement `ApiBaseService` — base service class for API communication
+- [ ] Implement `ApiService` — main API service with device registration, firmware queries, and reporting
+- [ ] Implement `WarrantyService` — warranty check API integration
+- [ ] Implement web API request/response models (`BaseRequestModel`, `RequestModel`, `ResponseModel`)
+- [ ] Implement API data models (`ToolVersionModel`, `FlashedDevModel`, `OrderItem`, `RespOrders`, `PriceInfo`)
+
+### 5. Authentication and Encryption Layer
+- [ ] Implement `RsaHelper` — RSA encryption/decryption utilities using BouncyCastle
+- [ ] Implement `RsaWebClient` — RSA-authenticated HTTP client (request signing, response verification)
+- [ ] Implement `RsaService` — RSA key exchange service for backend key negotiation
+- [ ] Implement `RSAKey` model — RSA key storage and serialization
+- [ ] Implement secure API request construction with auth tokens and device identifiers
+
+### 6. Software Download Framework (`lenovo.mbg.service.framework.download`)
+- [ ] Implement `DownloadWorker` and `DownloadTaskProcessor` — download orchestration
+- [ ] Implement `AbstractDownloadController` — base download controller with lifecycle management
+- [ ] Implement `GeneralDownloadController` — standard firmware download flow
+- [ ] Implement `ConditionDownloadController` — conditional download with device matching
+- [ ] Implement `ImmediatelyDownloadController` — priority download controller
+- [ ] Implement `HttpDownload` — HTTP download with chunking, resume, and retry support
+- [ ] Implement `FtpDownload` — FTP download support
+- [ ] Implement `DownloadThreadManager` and `ThreadHandle` — multi-threaded download management
+- [ ] Implement `DownloadTask` and `AbstractDownloadInfo` — download task state model
+- [ ] Implement `DownloadStatus` and `DownloadEventArgs` — status enums and progress notifications
+- [ ] Implement `SaveDownloadInfo2Json` — download progress persistence for resume
+- [ ] Implement `SysSleepManagement` — prevent system sleep during downloads
+
+### 7. Update and Version Checking (`lenovo.mbg.service.framework.updateversion`)
+- [ ] Implement `IVersionCheck` / `IVersionCheckV1` interfaces — version check contract
+- [ ] Implement `VersionCheckV1Impl` — version check with server communication
+- [ ] Implement `VersionDataV1Impl` — version data retrieval and parsing
+- [ ] Implement `VersionDownloadV1Impl` — update download logic
+- [ ] Implement `VersionInstallV1FullImpl` — full update installation
+- [ ] Implement `VersionInstallV1IncrementImpl` — incremental update installation
+- [ ] Implement `UpdateVersionAutoPush` and `UpdateWoker` — auto-update push mechanism
+- [ ] Implement `VersionModel` — version data model and comparison
+
 ---
 
 ## Device Management Features
 
-### 4. ADB Operations
+### 8. ADB Operations
 - [ ] Implement device detection and enumeration
 - [ ] Create install package functionality (with reinstall support)
 - [ ] Create uninstall package functionality
@@ -64,7 +177,7 @@ This task list tracks the complete reimplementation of the Lenovo Mobile Softwar
 - [ ] Create device property reader (getprop)
 - [ ] Implement package manager interface
 
-### 5. Fastboot Operations
+### 9. Fastboot Operations
 - [ ] Implement fastboot device detection
 - [ ] Create flash partition command (with 5-minute timeout)
 - [ ] Create erase partition command (userdata, metadata)
@@ -76,7 +189,7 @@ This task list tracks the complete reimplementation of the Lenovo Mobile Softwar
 - [ ] Implement continue command
 - [ ] Add anti-rollback protection detection
 
-### 6. Device Information Retrieval
+### 10. Device Information Retrieval
 - [ ] Implement property loader for device information
 - [ ] Create ReadPropertiesInFastboot for fastboot mode
 - [ ] Implement device variable parser
@@ -90,7 +203,7 @@ This task list tracks the complete reimplementation of the Lenovo Mobile Softwar
 
 ## Application Features (Plugins)
 
-### 7. Phone Manager Plugin
+### 11. Phone Manager Plugin
 - [ ] Implement home screen UI
 - [ ] Create app list viewer
 - [ ] Implement app installation interface
@@ -100,7 +213,7 @@ This task list tracks the complete reimplementation of the Lenovo Mobile Softwar
 - [ ] Add permission checking (Android 10+)
 - [ ] Implement activity manager commands (start, force-stop)
 
-### 8. Flash/Rescue Plugin
+### 12. Flash/Rescue Plugin
 - [ ] Create firmware flash wizard UI
 - [ ] Implement XML-based flash configuration parser
 - [ ] Create partition flashing interface
@@ -112,7 +225,7 @@ This task list tracks the complete reimplementation of the Lenovo Mobile Softwar
 - [ ] Create multi-device flash support
 - [ ] Implement flash file validation
 
-### 9. Backup/Restore Plugin
+### 13. Backup/Restore Plugin
 - [ ] Create backup wizard UI
 - [ ] Implement full backup functionality
 - [ ] Create selective backup (apps, data, settings)
@@ -121,7 +234,7 @@ This task list tracks the complete reimplementation of the Lenovo Mobile Softwar
 - [ ] Add compression support
 - [ ] Implement backup encryption
 
-### 10. Data Transfer Plugin
+### 14. Data Transfer Plugin
 - [ ] Create device-to-device transfer UI
 - [ ] Implement contact transfer
 - [ ] Create photo/media transfer
@@ -129,7 +242,7 @@ This task list tracks the complete reimplementation of the Lenovo Mobile Softwar
 - [ ] Add transfer progress tracking
 - [ ] Create transfer verification
 
-### 11. Hardware Test Plugin
+### 15. Hardware Test Plugin
 - [ ] Implement screen test
 - [ ] Create touchscreen test
 - [ ] Implement button test
@@ -139,7 +252,7 @@ This task list tracks the complete reimplementation of the Lenovo Mobile Softwar
 - [ ] Implement battery test
 - [ ] Add test result reporting
 
-### 12. Toolbox Plugin
+### 16. Toolbox Plugin
 - [ ] Implement screen recording functionality
 - [ ] Create screenshot tool
 - [ ] Implement network monitoring
@@ -151,7 +264,7 @@ This task list tracks the complete reimplementation of the Lenovo Mobile Softwar
 
 ## User Interface
 
-### 13. Main Window
+### 17. Main Window
 - [ ] Create main window layout (WPF/XAML)
 - [ ] Implement navigation system
 - [ ] Create device connection panel
@@ -159,14 +272,14 @@ This task list tracks the complete reimplementation of the Lenovo Mobile Softwar
 - [ ] Add multi-language support
 - [ ] Create theme system (including dark mode via lenovo.themes.generic.dll)
 
-### 14. Device Connection UI
+### 18. Device Connection UI
 - [ ] Create device list view
 - [ ] Implement connection status indicators
 - [ ] Add device information display
 - [ ] Create manual connection option (IP address)
 - [ ] Implement device selection
 
-### 15. Wizard/Tutorial System
+### 19. Wizard/Tutorial System
 - [ ] Create step-by-step wizard framework
 - [ ] Implement tutorial overlays
 - [ ] Add animated GIF tutorials (fastboot-guide-01.gif, etc.)
@@ -177,21 +290,21 @@ This task list tracks the complete reimplementation of the Lenovo Mobile Softwar
 
 ## Supporting Services
 
-### 16. Windows Service Component
+### 20. Windows Service Component
 - [ ] Implement LmsaWindowsService.exe
 - [ ] Create service installer (InstallUtil64.exe)
 - [ ] Implement service uninstaller
 - [ ] Add service configuration management
 - [ ] Create inter-process communication (pipes)
 
-### 17. Update/Download System
+### 21. Update/Download System
 - [ ] Implement firmware download manager
 - [ ] Create download progress tracking
 - [ ] Add checksum verification
 - [ ] Implement resume capability for interrupted downloads
 - [ ] Create download configuration parser (download-config.xml)
 
-### 18. Network Features
+### 22. Network Features
 - [ ] Implement WebView2 integration for web content
 - [ ] Create WebSocket server (SuperWebSocket)
 - [ ] Implement socket communication
@@ -202,14 +315,14 @@ This task list tracks the complete reimplementation of the Lenovo Mobile Softwar
 
 ## Configuration Management
 
-### 19. Configuration System
+### 23. Configuration System
 - [ ] Create XML configuration parser
 - [ ] Implement plugin configuration (plugins.xml)
 - [ ] Add log4net configuration support
 - [ ] Create download configuration
 - [ ] Implement language pack management (lang folder)
 
-### 20. Plugin Architecture
+### 24. Plugin Architecture
 - [ ] Create plugin loader/unloader
 - [ ] Implement plugin lifecycle management
 - [ ] Add plugin GUID management
@@ -220,7 +333,7 @@ This task list tracks the complete reimplementation of the Lenovo Mobile Softwar
 
 ## Security Features
 
-### 21. Security Implementation
+### 25. Security Implementation
 - [ ] Implement anti-rollback protection verification
 - [ ] Create secure version checking
 - [ ] Add permission validation (Android 10+)
@@ -231,7 +344,7 @@ This task list tracks the complete reimplementation of the Lenovo Mobile Softwar
 
 ## Error Handling and Recovery
 
-### 22. Error Management
+### 26. Error Management
 - [ ] Create centralized error handler
 - [ ] Implement error pattern detection ("error", "fail", anti-rollback)
 - [ ] Add exit code monitoring
@@ -239,7 +352,7 @@ This task list tracks the complete reimplementation of the Lenovo Mobile Softwar
 - [ ] Implement error logging
 - [ ] Add automatic retry logic with configurable attempts
 
-### 23. Device Status Monitoring
+### 27. Device Status Monitoring
 - [ ] Implement WMI device status checking
 - [ ] Create USB device monitoring
 - [ ] Add device disconnection detection
@@ -250,7 +363,7 @@ This task list tracks the complete reimplementation of the Lenovo Mobile Softwar
 
 ## Analytics and Telemetry
 
-### 24. Analytics Integration
+### 28. Analytics Integration
 - [ ] Implement Google Analytics tracking
 - [ ] Create usage statistics collection
 - [ ] Add feature usage tracking
@@ -261,14 +374,14 @@ This task list tracks the complete reimplementation of the Lenovo Mobile Softwar
 
 ## Additional Features
 
-### 25. Messaging and Support
+### 29. Messaging and Support
 - [ ] Implement in-app messaging system
 - [ ] Create forum integration
 - [ ] Add tips and tricks viewer
 - [ ] Implement support ticket system
 - [ ] Create feedback submission
 
-### 26. Utilities
+### 30. Utilities
 - [ ] Implement 7-Zip integration for archives
 - [ ] Create Protocol Buffers serialization
 - [ ] Add JSON configuration management
@@ -280,7 +393,7 @@ This task list tracks the complete reimplementation of the Lenovo Mobile Softwar
 
 ## Testing Infrastructure
 
-### 27. Testing
+### 31. Testing
 - [ ] Create unit tests for core operations
 - [ ] Implement integration tests for device communication
 - [ ] Add mock device for testing
@@ -291,7 +404,7 @@ This task list tracks the complete reimplementation of the Lenovo Mobile Softwar
 
 ## Documentation
 
-### 28. Documentation Tasks
+### 32. Documentation Tasks
 - [ ] Create API documentation
 - [ ] Write user manual
 - [ ] Create developer guide
@@ -302,12 +415,22 @@ This task list tracks the complete reimplementation of the Lenovo Mobile Softwar
 
 ## Priority Recommendations
 
+### Highest Priority (Reverse Engineering Analysis)
+1. **Complete all Phase 0.5 RE analysis tasks before writing implementation code**
+2. Web services analysis (RE-1) — understand API communication patterns
+3. API service models analysis (RE-2) — understand request/response structures
+4. Authentication and encryption analysis (RE-4) — understand security model
+5. Download framework analysis (RE-3) — understand firmware download flow
+
 ### High Priority (Core Functionality)
 1. Device communication layer (ADB/Fastboot wrappers)
 2. Process execution framework
-3. Flash/rescue operations
-4. Device information retrieval
-5. Error handling
+3. Web services layer (API communication)
+4. Authentication and encryption layer (RSA, BouncyCastle)
+5. Software download framework
+6. Flash/rescue operations
+7. Device information retrieval
+8. Error handling
 
 ### Medium Priority (User Features)
 1. Phone manager plugin
@@ -315,6 +438,7 @@ This task list tracks the complete reimplementation of the Lenovo Mobile Softwar
 3. Main window UI
 4. Configuration management
 5. Plugin architecture
+6. Update/version checking
 
 ### Low Priority (Additional Features)
 1. Hardware test plugin
@@ -338,9 +462,10 @@ This task list tracks the complete reimplementation of the Lenovo Mobile Softwar
 
 ## Estimated Complexity
 
-- **Total Tasks**: 28+ major feature areas (plus Phase 0 decompilation setup)
-- **Sub-tasks**: 150+ individual implementation items
-- **Complexity**: High (device communication, multi-threading, plugin system)
+- **Total Tasks**: 32+ major feature areas (plus Phase 0 decompilation setup and Phase 0.5 reverse engineering)
+- **Reverse Engineering Tasks**: 60+ individual analysis items across 7 categories
+- **Sub-tasks**: 200+ individual implementation items
+- **Complexity**: High (device communication, multi-threading, plugin system, encryption, API services)
 - **Testing Requirements**: Extensive (requires physical device testing for integration)
 
 ---

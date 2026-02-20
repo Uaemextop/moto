@@ -404,5 +404,16 @@ private static Dictionary<string, int> OperationToTimeout = new Dictionary<strin
 
 ---
 
+## Implementation Workflow (Mandatory)
+
+Before implementing any feature from the task list, follow this mandatory workflow:
+
+1. **Reverse engineering analysis**: Browse `decompiled/reference-src/` and analyze the relevant decompiled DLLs/EXEs for the feature — identify all classes, interfaces, enums, method signatures, data flow, dependencies, and algorithms
+2. **Review existing open-source code**: Read the current `LMSA.*` project sources to understand what has already been implemented and avoid duplication or conflicts
+3. **Implement**: Write clean C# code in the appropriate `LMSA.*` project directory, faithfully reproducing the decompiled logic
+4. **Project initialization**: If the solution file or project directories do not exist, create them with `dotnet new` commands before implementing. If already initialized, skip this step.
+
+---
+
 **Last Updated**: February 20, 2026
 **Applies To**: All LMSA implementation files
