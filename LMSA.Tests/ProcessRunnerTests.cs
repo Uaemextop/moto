@@ -44,7 +44,7 @@ public class ProcessRunnerTests
     {
         // On Linux cmd.exe doesn't exist, so this should return null
         string? result = ProcessRunner.CmdExcuteWithExit("echo test");
-        // Just verify it doesn't throw
-        Assert.True(result == null || result.Contains("test") || true);
+        // On Linux this returns null since cmd.exe is not available
+        Assert.Null(result);
     }
 }
