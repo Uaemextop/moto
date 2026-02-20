@@ -4,6 +4,12 @@
     <ProjectReference Include="..\LMSA.Framework.Services\LMSA.Framework.Services.csproj" />
     <ProjectReference Include="..\LMSA.Common.Utilities\LMSA.Common.Utilities.csproj" />
     <ProjectReference Include="..\LMSA.Common.WebServices\LMSA.Common.WebServices.csproj" />
+    <ProjectReference Include="..\LMSA.Common.Log\LMSA.Common.Log.csproj" />
+    <ProjectReference Include="..\LMSA.Framework.Pipes\LMSA.Framework.Pipes.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
   </ItemGroup>
 
   <PropertyGroup>
