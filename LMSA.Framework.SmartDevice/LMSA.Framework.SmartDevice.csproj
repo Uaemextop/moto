@@ -5,12 +5,23 @@
     <ProjectReference Include="..\LMSA.Framework.DeviceManagement\LMSA.Framework.DeviceManagement.csproj" />
     <ProjectReference Include="..\LMSA.Common.Utilities\LMSA.Common.Utilities.csproj" />
     <ProjectReference Include="..\LMSA.Common.Log\LMSA.Common.Log.csproj" />
+    <ProjectReference Include="..\LMSA.Common.WebServices\LMSA.Common.WebServices.csproj" />
+    <ProjectReference Include="..\LMSA.Framework.Resources\LMSA.Framework.Resources.csproj" />
+    <ProjectReference Include="..\LMSA.HostProxy\LMSA.HostProxy.csproj" />
+    <ProjectReference Include="..\LMSA.Themes\LMSA.Themes.csproj" />
   </ItemGroup>
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net8.0-windows</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <UseWPF>true</UseWPF>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Management" Version="10.0.3" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+  </ItemGroup>
 
 </Project>

@@ -10,6 +10,7 @@ examples.tmp/
 tmp/
 *.tmp
 *.temp
+build_output.txt
 
 # Build artifacts
 bin/
