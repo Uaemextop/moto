@@ -34,7 +34,7 @@ public class ServerPipe : BasicPipe
 		pipeSecurity.AddAccessRule(rule);
 		PipeAccessRule rule2 = new PipeAccessRule("Everyone", PipeAccessRights.ReadWrite, AccessControlType.Allow);
 		pipeSecurity.AddAccessRule(rule2);
-		serverPipeStream = new NamedPipeServerStream(PipeName, PipeDirection.InOut, -1, PipeTransmissionMode.Message, PipeOptions.Asynchronous, 512, 512, pipeSecurity, HandleInheritability.None);
+		serverPipeStream = NamedPipeServerStreamAcl.Create(PipeName, PipeDirection.InOut, -1, PipeTransmissionMode.Message, PipeOptions.Asynchronous, 512, 512, pipeSecurity, HandleInheritability.None);
 		pipeStream = serverPipeStream;
 		serverPipeStream.BeginWaitForConnection(PipeConnected, null);
 	}

@@ -44,7 +44,7 @@ public class Plugin : IDisposable
 		{
 			if (mPlugin != null)
 			{
-				View = mPlugin.CreateControl(null);
+				View = (FrameworkElement)mPlugin.CreateControl(null);
 			}
 		}
 		catch (Exception exception)

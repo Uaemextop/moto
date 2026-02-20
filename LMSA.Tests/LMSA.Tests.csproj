@@ -29,6 +29,8 @@
     <ProjectReference Include="..\LMSA.Common.Log\LMSA.Common.Log.csproj" />
     <ProjectReference Include="..\LMSA.Common.WebServices\LMSA.Common.WebServices.csproj" />
     <ProjectReference Include="..\LMSA.Common\LMSA.Common.csproj" />
+    <ProjectReference Include="..\LMSA.Framework.Download\LMSA.Framework.Download.csproj" />
+    <ProjectReference Include="..\LMSA.Framework.Socket\LMSA.Framework.Socket.csproj" />
   </ItemGroup>
 
 </Project>

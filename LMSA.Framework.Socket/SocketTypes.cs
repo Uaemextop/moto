@@ -105,9 +105,17 @@ public class PackageSpliter
 }
 
 /// <summary>
+/// Interface for sequence generation.
+/// </summary>
+public interface ISequence
+{
+    long New();
+}
+
+/// <summary>
 /// Sequence generator for messages.
 /// </summary>
-public class Sequence
+public class Sequence : ISequence
 {
     private static Sequence _instance;
     private long _current;
