@@ -1,0 +1,148 @@
+name: "Copilot Setup Steps for LMSA Implementation"
+
+# This workflow configures the development environment for implementing
+# a production-ready version of Lenovo Mobile Software Assistant (LMSA)
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - .github/workflows/copilot-setup-steps.yml
+  pull_request:
+    paths:
+      - .github/workflows/copilot-setup-steps.yml
+
+jobs:
+  # The job MUST be named exactly "copilot-setup-steps"
+  copilot-setup-steps:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Install .NET SDK for development
+      - name: Set up .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0'
+
+      # Install ILSpy for reference to decompiled code patterns
+      - name: Install ILSpy decompilation tool
+        run: dotnet tool install --global ilspycmd
+
+      # Install .NET development and testing tools
+      - name: Install .NET development tools
+        run: |
+          dotnet tool install --global dotnet-format
+          dotnet tool install --global dotnet-reportgenerator-globaltool
+          dotnet tool install --global dotnet-coverage
+          dotnet tool install --global dotnet-outdated-tool
+          dotnet tool install --global dotnet-ef
+
+      # Install code quality and security analyzers
+      - name: Install code quality analyzers
+        run: |
+          dotnet tool install --global security-scan || echo "Security scan optional"
+          dotnet tool install --global dotnet-sonarscanner || echo "SonarScanner optional"
+
+      # Download reference binaries for pattern analysis
+      - name: Download LMSA reference binaries
+        run: |
+          wget -q -O /tmp/lmsa.zip "https://www.dropbox.com/scl/fi/3kuolvy11282n0q0pw99b/examples.zip?rlkey=1rldjq71q8igq0ban9lg9homn&st=07i1mewd&dl=1"
+          unzip -q /tmp/lmsa.zip -d decompiled/reference
+          echo "Downloaded LMSA reference binaries for analysis"
+
+      # Decompile reference sources for pattern reference
+      - name: Decompile reference sources
+        run: |
+          mkdir -p decompiled/reference-src
+
+          # Decompile core framework DLLs
+          ilspycmd "decompiled/reference/lenovo.mbg.service.framework.smartdevice.dll" -p -o decompiled/reference-src/smartdevice 2>/dev/null || true
+          ilspycmd "decompiled/reference/lenovo.mbg.service.framework.devicemgt.dll" -p -o decompiled/reference-src/devicemgt 2>/dev/null || true
+
+          # Decompile main plugins for pattern reference
+          find decompiled/reference/plugins -name "lenovo*.dll" -type f 2>/dev/null | while read dll; do
+            name=$(basename "$dll" .dll)
+            ilspycmd "$dll" -p -o "decompiled/reference-src/plugins/$name" 2>/dev/null || true
+          done
+
+          echo "Decompiled reference sources for implementation patterns"
+
+      # Create project structure for real implementation
+      - name: Initialize LMSA project structure
+        run: |
+          # Create solution
+          dotnet new sln -n LMSA
+
+          # Create core library project
+          dotnet new classlib -n LMSA.Core -f net8.0
+          dotnet sln add LMSA.Core/LMSA.Core.csproj
+
+          # Create device management library
+          dotnet new classlib -n LMSA.DeviceManagement -f net8.0
+          dotnet sln add LMSA.DeviceManagement/LMSA.DeviceManagement.csproj
+
+          # Create plugins base library
+          dotnet new classlib -n LMSA.Plugins.Common -f net8.0
+          dotnet sln add LMSA.Plugins.Common/LMSA.Plugins.Common.csproj
+
+          # Create main WPF application
+          dotnet new wpf -n LMSA.App -f net8.0-windows
+          dotnet sln add LMSA.App/LMSA.App.csproj
+
+          # Create test project
+          dotnet new xunit -n LMSA.Tests -f net8.0
+          dotnet sln add LMSA.Tests/LMSA.Tests.csproj
+
+          echo "Created LMSA solution structure"
+
+      # Install required NuGet packages
+      - name: Install production dependencies
+        run: |
+          # Core dependencies
+          dotnet add LMSA.Core/LMSA.Core.csproj package Newtonsoft.Json
+          dotnet add LMSA.Core/LMSA.Core.csproj package log4net
+          dotnet add LMSA.Core/LMSA.Core.csproj package protobuf-net
+
+          # Device management dependencies
+          dotnet add LMSA.DeviceManagement/LMSA.DeviceManagement.csproj package SharpAdbClient
+          dotnet add LMSA.DeviceManagement/LMSA.DeviceManagement.csproj package Newtonsoft.Json
+          dotnet add LMSA.DeviceManagement/LMSA.DeviceManagement.csproj package log4net
+
+          # Plugin dependencies
+          dotnet add LMSA.Plugins.Common/LMSA.Plugins.Common.csproj package Newtonsoft.Json
+
+          # WPF application dependencies
+          dotnet add LMSA.App/LMSA.App.csproj package Microsoft.Xaml.Behaviors.Wpf
+          dotnet add LMSA.App/LMSA.App.csproj package Microsoft.Web.WebView2
+          dotnet add LMSA.App/LMSA.App.csproj package Newtonsoft.Json
+
+          # Test dependencies
+          dotnet add LMSA.Tests/LMSA.Tests.csproj package Moq
+          dotnet add LMSA.Tests/LMSA.Tests.csproj package FluentAssertions
+          dotnet add LMSA.Tests/LMSA.Tests.csproj package coverlet.collector
+
+          echo "Installed production dependencies"
+
+      # Build the solution to verify setup
+      - name: Build solution
+        run: |
+          dotnet restore LMSA.sln
+          dotnet build LMSA.sln --no-restore
+          echo "Solution built successfully"
+
+      # Cache build artifacts and reference sources
+      - name: Cache build and references
+        uses: actions/cache@v4
+        with:
+          path: |
+            decompiled/
+            ~/.nuget/packages
+          key: lmsa-build-${{ hashFiles('**/*.csproj', '.github/workflows/copilot-setup-steps.yml') }}
+          restore-keys: |
+            lmsa-build-
