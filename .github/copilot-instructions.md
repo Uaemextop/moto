@@ -6,6 +6,8 @@ This project is a C# .NET Framework implementation of the Lenovo Mobile Software
 
 **Project Goal**: Implement a complete, production-ready version of LMSA based on decompiled source code analysis.
 
+**IMPORTANT**: This is a REAL, production application - not an example, demo, or reference implementation. You are writing actual working code that will manage real Android devices.
+
 ---
 
 ## Technology Stack

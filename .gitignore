@@ -1,13 +1,10 @@
-# Decompiled sources directory
+# Decompiled sources (reference only)
 decompiled/
 *.decompiled/
 
-# Downloaded binaries
-examples/
+# Temporary download files
 *.zip
-*.dll
-*.exe
-*.msi
+examples.tmp/
 
 # Temporary files
 tmp/
@@ -19,6 +16,7 @@ bin/
 obj/
 *.user
 *.suo
+*.cache
 
 # IDE files
 .vs/
@@ -28,6 +26,16 @@ obj/
 # Logs
 *.log
 logs/
+
+# NuGet packages
+packages/
+*.nupkg
+
+# Test results
+TestResults/
+coverage/
+*.trx
+*.coverage
 
 # OS files
 .DS_Store
