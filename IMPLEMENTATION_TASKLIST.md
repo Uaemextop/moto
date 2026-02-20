@@ -17,10 +17,10 @@ This task list tracks the complete reimplementation of the Lenovo Mobile Softwar
 
 ## Phase 0: Decompilation Setup (Prerequisite)
 
-- [ ] Verify all reference binaries are present in `decompiled/reference/`
-- [ ] Confirm CI workflow has recursively decompiled all DLLs and EXEs to `decompiled/reference-src/`
-- [ ] Catalog all decompiled namespaces and top-level classes in `decompiled/reference-src/`
-- [ ] Map decompiled assembly structure to `LMSA.*` project directories
+- [x] Verify all reference binaries are present in `decompiled/reference/`
+- [x] Confirm CI workflow has recursively decompiled all DLLs and EXEs to `decompiled/reference-src/`
+- [x] Catalog all decompiled namespaces and top-level classes in `decompiled/reference-src/`
+- [x] Map decompiled assembly structure to `LMSA.*` project directories
 
 ---
 
