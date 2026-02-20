@@ -2,12 +2,16 @@
 
   <ItemGroup>
     <ProjectReference Include="..\LMSA.Framework.Services\LMSA.Framework.Services.csproj" />
+    <ProjectReference Include="..\LMSA.Framework.SmartBase\LMSA.Framework.SmartBase.csproj" />
+    <ProjectReference Include="..\LMSA.Framework.Socket\LMSA.Framework.Socket.csproj" />
   </ItemGroup>
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net8.0-windows</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <UseWPF>true</UseWPF>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
   </PropertyGroup>
 
 </Project>
