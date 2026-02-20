@@ -1,0 +1,314 @@
+using System;
+using System.ComponentModel;
+using System.Text.RegularExpressions;
+
+namespace lenovo.mbg.service.framework.services.Download;
+
+[Serializable]
+public class DownloadInfo : EventArgs, INotifyPropertyChanged
+{
+    private string _originalFileName;
+    private string _FileName;
+    private string _Speed;
+    private double _Progress;
+    private DownloadStatus _Status;
+    private long _LocalFileSize;
+    private long _FileSize;
+    private string _FileType;
+    private string _DownloadUrl;
+    private string _LocalPath;
+    private bool _ShowInUI = true;
+    private string _MD5;
+    private string _NeedTakesTime;
+    private bool _UnZip;
+    private string _LocalFileSizeStr = "0MB";
+    private string _FileSizeStr = "0MB";
+    private string _ErrorMessage = "";
+
+    public Action<DownloadStatus> OnComplete;
+
+    public bool IsManualMatch { get; set; }
+
+    public string FileType
+    {
+        get => _FileType;
+        set
+        {
+            _FileType = FileTypeConverter(value);
+            FirePropertyChangedEvent(nameof(FileType));
+        }
+    }
+
+    public string FileUrl { get; private set; }
+
+    public string DownloadUrl
+    {
+        get => _DownloadUrl;
+        set
+        {
+            _DownloadUrl = value;
+            FileUrl = _DownloadUrl.Split(new char[] { '?' })[0];
+            OriginalFileName = GetFileName(FileUrl);
+        }
+    }
+
+    public string FileName
+    {
+        get => _FileName;
+        private set
+        {
+            _FileName = value;
+            FirePropertyChangedEvent(nameof(FileName));
+        }
+    }
+
+    public string OriginalFileName
+    {
+        get => _originalFileName;
+        private set
+        {
+            _originalFileName = value;
+            Regex regex = new Regex("-|\\\\|\\/|:|\\*|\\?|\\<|\\>|\"");
+            FileName = regex.Replace(Uri.UnescapeDataString(_originalFileName ?? ""), "_");
+        }
+    }
+
+    public string LocalPath
+    {
+        get => _LocalPath;
+        set
+        {
+            _LocalPath = value;
+            FirePropertyChangedEvent(nameof(LocalPath));
+        }
+    }
+
+    public long FileSize
+    {
+        get => _FileSize;
+        set
+        {
+            _FileSize = value;
+            FileSizeStr = ConvertLong2String2(value);
+            FirePropertyChangedEvent(nameof(FileSize));
+        }
+    }
+
+    public string MD5
+    {
+        get => _MD5;
+        set
+        {
+            _MD5 = value;
+            FirePropertyChangedEvent(nameof(MD5));
+        }
+    }
+
+    public bool ShowInUI
+    {
+        get => _ShowInUI;
+        set
+        {
+            _ShowInUI = value;
+            FirePropertyChangedEvent(nameof(ShowInUI));
+        }
+    }
+
+    public DateTime CreateDateTime { get; set; }
+
+    public string Speed
+    {
+        get => _Speed;
+        set
+        {
+            _Speed = value;
+            FirePropertyChangedEvent(nameof(Speed));
+        }
+    }
+
+    public string NeedTakesTime
+    {
+        get => _NeedTakesTime;
+        set
+        {
+            _NeedTakesTime = value;
+            FirePropertyChangedEvent(nameof(NeedTakesTime));
+        }
+    }
+
+    public double Progress
+    {
+        get => _Progress;
+        set
+        {
+            _Progress = value;
+            FirePropertyChangedEvent(nameof(Progress));
+        }
+    }
+
+    public DownloadStatus Status
+    {
+        get => _Status;
+        set
+        {
+            _Status = value;
+            FirePropertyChangedEvent(nameof(Status));
+        }
+    }
+
+    public long LocalFileSize
+    {
+        get => _LocalFileSize;
+        set
+        {
+            _LocalFileSize = value;
+            LocalFileSizeStr = ConvertLong2String2(value);
+            FirePropertyChangedEvent(nameof(LocalFileSize));
+        }
+    }
+
+    public bool UnZip
+    {
+        get => _UnZip;
+        set
+        {
+            _UnZip = value;
+            FirePropertyChangedEvent(nameof(UnZip));
+        }
+    }
+
+    public string ZipPwd { get; set; }
+
+    public string LocalFileSizeStr
+    {
+        get => _LocalFileSizeStr;
+        set
+        {
+            _LocalFileSizeStr = value;
+            FirePropertyChangedEvent(nameof(LocalFileSizeStr));
+        }
+    }
+
+    public string FileSizeStr
+    {
+        get => _FileSizeStr;
+        set
+        {
+            _FileSizeStr = value;
+            FirePropertyChangedEvent(nameof(FileSizeStr));
+        }
+    }
+
+    public string ErrorMessage
+    {
+        get => _ErrorMessage;
+        set
+        {
+            _ErrorMessage = value;
+            FirePropertyChangedEvent(nameof(ErrorMessage));
+        }
+    }
+
+    public event PropertyChangedEventHandler PropertyChanged;
+
+    public virtual bool CanDownload()
+    {
+        return true;
+    }
+
+    public DownloadInfo()
+    {
+        Speed = "0KB/S";
+        Progress = 0.0;
+        FileType = "UNKNOWN";
+        CreateDateTime = DateTime.Now;
+    }
+
+    public DownloadInfo(string fileUrl, string localPath, long fileSize, string md5, string fileType = "UNKNOWN")
+        : this(fileUrl, localPath, fileSize, md5, fileType, null)
+    {
+    }
+
+    public DownloadInfo(string fileUrl, string localPath, long fileSize, string md5, string fileType, Action<DownloadStatus> onComplete, bool showInUI = false)
+    {
+        FileType = fileType;
+        DownloadUrl = fileUrl;
+        LocalPath = localPath;
+        FileSize = fileSize;
+        MD5 = md5;
+        CreateDateTime = DateTime.Now;
+        ShowInUI = true;
+        Speed = "0KB/S";
+        Progress = 0.0;
+        OnComplete = onComplete;
+    }
+
+    public void FireComplete(DownloadStatus status)
+    {
+        try
+        {
+            OnComplete?.Invoke(status);
+        }
+        catch (Exception)
+        {
+        }
+    }
+
+    protected string GetFileName(string fileUrl)
+    {
+        string[] array = Regex.Split(fileUrl ?? "", "\\\\|/");
+        if (array != null && array.Length != 0)
+        {
+            return array[^1];
+        }
+        return fileUrl;
+    }
+
+    protected void FirePropertyChangedEvent(string propertyName)
+    {
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    }
+
+    private string FileTypeConverter(string data)
+    {
+        if (string.IsNullOrEmpty(data))
+        {
+            return "UNKNOWN";
+        }
+        return data.ToUpper() switch
+        {
+            "APK" => "APK",
+            "ICON" => "ICON",
+            "ROM" => "ROM",
+            "TOOL" => "TOOL",
+            "COUNTRYCODE" or "COUNTRY_CODE" => "COUNTRYCODE",
+            "JSON" => "JSON",
+            "BANNER" or "BANNER_ICON" => "BANNER",
+            "XAML" => "XAML",
+            _ => "UNKNOWN",
+        };
+    }
+
+    private string ConvertLong2String2(long bytes)
+    {
+        string text = "F1";
+        float num = bytes;
+        if (bytes == 0L)
+        {
+            return "0MB";
+        }
+        if (bytes > 1000)
+        {
+            if (bytes >= 1024000)
+            {
+                if (bytes >= 1024000000)
+                {
+                    return (num / 1.0737418E+09f).ToString(text) + "GB";
+                }
+                return (num / 1048576f).ToString(text) + "MB";
+            }
+            return (num / 1024f).ToString(text) + "KB";
+        }
+        return bytes + "B";
+    }
+}
