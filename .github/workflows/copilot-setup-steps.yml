@@ -56,22 +56,37 @@ jobs:
           unzip -q /tmp/lmsa.zip -d decompiled/reference
           echo "Downloaded LMSA reference binaries for analysis"
 
-      # Decompile reference sources for pattern reference
-      - name: Decompile reference sources
+      # Recursively decompile all .NET DLLs and EXEs for open-source reimplementation
+      - name: Decompile reference sources (recursive)
         run: |
           mkdir -p decompiled/reference-src
 
-          # Decompile core framework DLLs
-          ilspycmd "decompiled/reference/lenovo.mbg.service.framework.smartdevice.dll" -p -o decompiled/reference-src/smartdevice 2>/dev/null || true
-          ilspycmd "decompiled/reference/lenovo.mbg.service.framework.devicemgt.dll" -p -o decompiled/reference-src/devicemgt 2>/dev/null || true
+          # Helper: check if a binary is a .NET assembly before decompiling
+          is_dotnet_assembly() {
+            file "$1" 2>/dev/null | grep -qiE "PE32|\.NET|Mono" && \
+            (strings "$1" 2>/dev/null | grep -q "mscoree\|mscorlib\|System\.Runtime" || true)
+          }
 
-          # Decompile main plugins for pattern reference
-          find decompiled/reference/plugins -name "lenovo*.dll" -type f 2>/dev/null | while read dll; do
-            name=$(basename "$dll" .dll)
-            ilspycmd "$dll" -p -o "decompiled/reference-src/plugins/$name" 2>/dev/null || true
+          # Recursively find and decompile all .NET DLLs and EXEs
+          find decompiled/reference -type f \( -iname "*.dll" -o -iname "*.exe" \) 2>/dev/null | while read binary; do
+            # Derive output directory mirroring the source tree
+            rel="${binary#decompiled/reference/}"
+            name="${rel%.*}"
+            outdir="decompiled/reference-src/${name}"
+            mkdir -p "$outdir"
+
+            # Attempt decompilation; skip non-.NET binaries gracefully
+            if ilspycmd "$binary" -p -o "$outdir" 2>/dev/null; then
+              echo "Decompiled: $binary -> $outdir"
+            else
+              echo "Skipped (not a .NET assembly or error): $binary"
+              rmdir "$outdir" 2>/dev/null || true
+            fi
           done
 
-          echo "Decompiled reference sources for implementation patterns"
+          # Print summary
+          total=$(find decompiled/reference-src -name "*.cs" 2>/dev/null | wc -l)
+          echo "Decompilation complete. Total .cs files generated: $total"
 
       # Create project structure for real implementation
       - name: Initialize LMSA project structure
