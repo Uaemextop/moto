@@ -1,0 +1,115 @@
+name: "Copilot Setup Steps for LMSA"
+
+# This workflow configures the development environment for GitHub Copilot agent
+# by downloading and decompiling the Lenovo Mobile Software Assistant binaries
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - .github/workflows/copilot-setup-steps.yml
+  pull_request:
+    paths:
+      - .github/workflows/copilot-setup-steps.yml
+
+jobs:
+  # The job MUST be named exactly "copilot-setup-steps"
+  copilot-setup-steps:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Install .NET SDK for decompilation tools
+      - name: Set up .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0'
+
+      # Install ILSpy command-line decompiler
+      - name: Install ILSpy decompilation tool
+        run: dotnet tool install --global ilspycmd
+
+      # Create decompiled sources directory
+      - name: Create decompiled directory
+        run: mkdir -p decompiled
+
+      # Download the LMSA software package from Dropbox
+      - name: Download LMSA software package
+        run: |
+          wget -O examples.zip "https://www.dropbox.com/scl/fi/3kuolvy11282n0q0pw99b/examples.zip?rlkey=1rldjq71q8igq0ban9lg9homn&st=07i1mewd&dl=1"
+          unzip -q examples.zip -d examples
+          echo "Downloaded and extracted LMSA software package"
+
+      # Decompile main executable
+      - name: Decompile Software Fix.exe
+        run: |
+          ilspycmd "examples/Software Fix.exe" -p -o decompiled/SoftwareFix
+          echo "Decompiled main executable"
+
+      # Decompile core framework DLLs
+      - name: Decompile core framework DLLs
+        run: |
+          ilspycmd examples/lenovo.mbg.service.framework.smartdevice.dll -p -o decompiled/smartdevice
+          ilspycmd examples/lenovo.mbg.service.framework.devicemgt.dll -p -o decompiled/devicemgt
+          ilspycmd examples/lenovo.mbg.service.framework.services.dll -p -o decompiled/services
+          ilspycmd examples/lenovo.mbg.service.common.utilities.dll -p -o decompiled/utilities
+          echo "Decompiled core framework DLLs"
+
+      # Decompile plugin DLLs
+      - name: Decompile plugin DLLs
+        run: |
+          # Phone Manager plugin
+          if [ -f "examples/plugins/02928af025384c75ae055aa2d4f256c8/lenovo.mbg.service.lmsa.phoneManager.dll" ]; then
+            ilspycmd "examples/plugins/02928af025384c75ae055aa2d4f256c8/lenovo.mbg.service.lmsa.phoneManager.dll" -p -o decompiled/plugins/phoneManager
+          fi
+
+          # Flash plugin
+          if [ -f "examples/plugins/8ab04aa975e34f1ca4f9dc3a81374e2c/lenovo.mbg.service.lmsa.flash.dll" ]; then
+            ilspycmd "examples/plugins/8ab04aa975e34f1ca4f9dc3a81374e2c/lenovo.mbg.service.lmsa.flash.dll" -p -o decompiled/plugins/flash
+          fi
+
+          # Backup/Restore plugin
+          if [ -f "examples/plugins/13f79fe4cfc98747c78794a943886bcd/lenovo.mbg.service.lmsa.backuprestore.dll" ]; then
+            ilspycmd "examples/plugins/13f79fe4cfc98747c78794a943886bcd/lenovo.mbg.service.lmsa.backuprestore.dll" -p -o decompiled/plugins/backuprestore
+          fi
+
+          # Data Transfer plugin
+          if [ -f "examples/plugins/d8042f96b792942ceaca624a7f697d1e/lenovo.mbg.service.lmsa.dataTransfer.dll" ]; then
+            ilspycmd "examples/plugins/d8042f96b792942ceaca624a7f697d1e/lenovo.mbg.service.lmsa.dataTransfer.dll" -p -o decompiled/plugins/dataTransfer
+          fi
+
+          # Hardware Test plugin
+          if [ -f "examples/plugins/985c66acdde2483ed96844a6b5ea4337/lenovo.mbg.service.lmsa.hardwaretest.dll" ]; then
+            ilspycmd "examples/plugins/985c66acdde2483ed96844a6b5ea4337/lenovo.mbg.service.lmsa.hardwaretest.dll" -p -o decompiled/plugins/hardwaretest
+          fi
+
+          # Toolbox plugin
+          if [ -f "examples/plugins/dd537b5c6c074ae49cc8b0b2965ce54a/lenovo.mbg.service.lmsa.toolbox.dll" ]; then
+            ilspycmd "examples/plugins/dd537b5c6c074ae49cc8b0b2965ce54a/lenovo.mbg.service.lmsa.toolbox.dll" -p -o decompiled/plugins/toolbox
+          fi
+
+          echo "Decompiled plugin DLLs"
+
+      # Verify decompilation results
+      - name: Verify decompilation
+        run: |
+          echo "Decompilation complete!"
+          echo "Decompiled main application: $(find decompiled/SoftwareFix -name '*.cs' | wc -l) C# files"
+          echo "Decompiled framework: $(find decompiled/smartdevice decompiled/devicemgt -name '*.cs' 2>/dev/null | wc -l) C# files"
+          echo "Decompiled plugins: $(find decompiled/plugins -name '*.cs' 2>/dev/null | wc -l) C# files"
+
+      # Cache decompiled sources for faster subsequent runs
+      - name: Cache decompiled sources
+        uses: actions/cache@v4
+        with:
+          path: |
+            decompiled/
+            examples/
+          key: lmsa-decompiled-${{ hashFiles('.github/workflows/copilot-setup-steps.yml') }}
+          restore-keys: |
+            lmsa-decompiled-
