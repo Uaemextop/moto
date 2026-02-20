@@ -89,68 +89,16 @@ jobs:
           total=$(find decompiled/reference-src -name "*.cs" 2>/dev/null | wc -l)
           echo "Decompilation complete. Total .cs files generated: $total"
 
-      # Create project structure for real implementation
-      - name: Initialize LMSA project structure
+      # Restore NuGet packages if solution exists
+      - name: Restore NuGet packages
         run: |
-          # Create solution
-          dotnet new sln -n LMSA
-
-          # Create core library project
-          dotnet new classlib -n LMSA.Core -f net8.0
-          dotnet sln add LMSA.Core/LMSA.Core.csproj
-
-          # Create device management library
-          dotnet new classlib -n LMSA.DeviceManagement -f net8.0
-          dotnet sln add LMSA.DeviceManagement/LMSA.DeviceManagement.csproj
-
-          # Create plugins base library
-          dotnet new classlib -n LMSA.Plugins.Common -f net8.0
-          dotnet sln add LMSA.Plugins.Common/LMSA.Plugins.Common.csproj
-
-          # Create main WPF application
-          dotnet new wpf -n LMSA.App -f net8.0-windows
-          dotnet sln add LMSA.App/LMSA.App.csproj
-
-          # Create test project
-          dotnet new xunit -n LMSA.Tests -f net8.0
-          dotnet sln add LMSA.Tests/LMSA.Tests.csproj
-
-          echo "Created LMSA solution structure"
-
-      # Install required NuGet packages
-      - name: Install production dependencies
-        run: |
-          # Core dependencies
-          dotnet add LMSA.Core/LMSA.Core.csproj package Newtonsoft.Json
-          dotnet add LMSA.Core/LMSA.Core.csproj package log4net
-          dotnet add LMSA.Core/LMSA.Core.csproj package protobuf-net
-
-          # Device management dependencies
-          dotnet add LMSA.DeviceManagement/LMSA.DeviceManagement.csproj package SharpAdbClient
-          dotnet add LMSA.DeviceManagement/LMSA.DeviceManagement.csproj package Newtonsoft.Json
-          dotnet add LMSA.DeviceManagement/LMSA.DeviceManagement.csproj package log4net
-
-          # Plugin dependencies
-          dotnet add LMSA.Plugins.Common/LMSA.Plugins.Common.csproj package Newtonsoft.Json
-
-          # WPF application dependencies
-          dotnet add LMSA.App/LMSA.App.csproj package Microsoft.Xaml.Behaviors.Wpf
-          dotnet add LMSA.App/LMSA.App.csproj package Microsoft.Web.WebView2
-          dotnet add LMSA.App/LMSA.App.csproj package Newtonsoft.Json
-
-          # Test dependencies
-          dotnet add LMSA.Tests/LMSA.Tests.csproj package Moq
-          dotnet add LMSA.Tests/LMSA.Tests.csproj package FluentAssertions
-          dotnet add LMSA.Tests/LMSA.Tests.csproj package coverlet.collector
-
-          echo "Installed production dependencies"
-
-      # Build the solution to verify setup
-      - name: Build solution
-        run: |
-          dotnet restore LMSA.sln
-          dotnet build LMSA.sln --no-restore
-          echo "Solution built successfully"
+          if ls *.sln *.slnx 2>/dev/null | head -1 > /dev/null; then
+            SLN=$(ls *.sln *.slnx 2>/dev/null | head -1)
+            echo "Found solution file: $SLN"
+            dotnet restore "$SLN" || echo "Restore had warnings (non-fatal)"
+          else
+            echo "No solution file found — agent will initialize the project structure"
+          fi
 
       # Cache build artifacts and reference sources
       - name: Cache build and references
