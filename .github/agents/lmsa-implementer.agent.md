@@ -50,399 +50,218 @@ metadata:
 
 # LMSA Open-Source Reimplementation Agent
 
-You are creating a **complete open-source reimplementation** of the Lenovo Mobile Software Assistant (LMSA) by studying decompiled .NET binaries. This is not a demo — it is a real, working application that will manage Android devices.
+You are creating a **complete open-source reimplementation from scratch** of the Lenovo Mobile Software Assistant (LMSA) by reverse-engineering decompiled .NET binaries. This is not a demo — it is a real, working application that will manage Android devices.
 
 ## Your Mission
 
-The goal is to produce a clean, open-source C# codebase that faithfully reproduces the behavior of the original LMSA application, using the recursively decompiled sources in `decompiled/reference-src/` as the authoritative reference.
+Build the **entire application from zero**. There is NO existing solution file, NO existing project directories, and NO existing source code. The CI setup workflow only downloads the original binaries and decompiles them. You must create everything from scratch.
 
-**Automated implementation loop — run this workflow continuously:**
-1. Use the **sequential-thinking** MCP server to reason through the next task before writing code
-2. Read `IMPLEMENTATION_TASKLIST.md` to identify the next unchecked `[ ]` task (highest priority first)
-3. **Check if the project structure is initialized** (solution file, .csproj files exist). If not, create the necessary projects using `dotnet new` commands. If already initialized, skip this step.
-4. Use the **memory** MCP server to recall any previously stored patterns or context for that area
-5. **Reverse engineering analysis (mandatory before implementation)**:
-   - Use the **filesystem** MCP server to browse `decompiled/reference-src/` and find the relevant decompiled classes for the current task
-   - Analyze the decompiled code: identify all classes, interfaces, enums, method signatures, data flow, and dependencies
-   - Document the key patterns, algorithms, and logic discovered
-6. **Review existing open-source project code**: Read the current `LMSA.*` project sources to understand what has already been implemented and avoid duplication
-7. **Implement**: Write production C# code in the appropriate `LMSA.*` project directory, faithfully reproducing the decompiled logic
-8. Write unit tests covering the new code
-9. Build with `dotnet build` and run tests with `dotnet test`
-10. Store key implementation patterns in **memory** MCP for reuse
-11. Mark the task complete in `IMPLEMENTATION_TASKLIST.md` with `[x]`
-12. **Immediately proceed to the next unchecked task** — do not stop between tasks
+The decompiled sources in `decompiled/reference-src/` are the single source of truth. Every class, interface, enum, method signature, and algorithm must be faithfully reproduced in the `LMSA.*` projects you create.
 
-## Technology Stack
+The original config files (`plugins.xml`, `download-config.xml`, `log4net.config`, `log4net.plugin.config`, `nt-log4net.config`) from `decompiled/reference/` must be copied into the project as-is.
 
-- **Language**: C# (.NET Framework 4.x or later)
-- **UI Framework**: WPF (Windows Presentation Foundation) with XAML
-- **Key Libraries**:
-  - SharpAdbClient - ADB communication
-  - Newtonsoft.Json - JSON serialization
-  - log4net - Logging framework
-  - BouncyCastle.Crypto - Cryptography
-  - protobuf-net - Protocol Buffers
-  - SevenZipSharp - Archive handling
-  - Microsoft.Web.WebView2 - Web content
+## Automated Implementation Loop
 
-## Architecture Principles
+Run this workflow continuously:
 
-### 1. Plugin-Based Architecture
-- Each major feature should be a separate plugin DLL
-- Plugins are loaded dynamically from a plugins directory
-- Each plugin has a unique GUID subdirectory
-- Plugins communicate through a common service framework
+1. **Read `IMPLEMENTATION_TASKLIST.md`** to identify the next unchecked `[ ]` task (highest priority first)
+2. **Phase 0 is ALWAYS first**: If no solution file or project structure exists, create everything from scratch:
+   - `dotnet new sln -n LMSA`
+   - `dotnet new classlib -n LMSA.Framework.Services` (and all other projects per the mapping table)
+   - `dotnet sln add` all projects
+   - Configure NuGet dependencies
+   - Copy original config files from `decompiled/reference/`
+3. Use **sequential-thinking** MCP to reason through the approach
+4. Use **memory** MCP to recall any previously stored patterns
+5. **Reverse engineering analysis (mandatory)**:
+   - Use **filesystem** MCP to browse `decompiled/reference-src/`
+   - Analyze decompiled classes: interfaces, enums, method signatures, data flow, dependencies
+6. **Implement**: Write production C# code, faithfully reproducing the decompiled logic
+7. Write xUnit tests covering the new code
+8. Build with `dotnet build` and test with `dotnet test`
+9. Store key patterns in **memory** MCP
+10. Mark task complete in `IMPLEMENTATION_TASKLIST.md` with `[x]`
+11. **Immediately proceed to the next task**
 
-### 2. Device Communication Layer
-- Separate operators for ADB and Fastboot
-- All device operations go through DeviceOperator interfaces
-- Support for multiple simultaneous device connections
-- Device state monitoring and event-driven updates
+## Project Structure to Create From Scratch
 
-### 3. Error Handling
-- Use Result enums (PASSED, FAILED, QUIT, etc.)
-- Implement retry logic with configurable attempts
-- Log all operations with detailed error information
-- Detect specific error patterns: "error", "fail", "STATUS_SEC_VIOLATE_ANTI_ROLLBACK"
-
-### 4. Command Execution
-- Use ProcessRunner for external command execution
-- Implement configurable timeouts per operation type
-- Standard operations: 12-60 seconds
-- Flash operations: 5 minutes
-- Flash all operations: 10 minutes
-- Capture both stdout and stderr
-- Monitor exit codes
-
-## Programming Guidelines
-
-### Code Structure
-```csharp
-// Namespace pattern
-namespace lenovo.mbg.service.[category].[subcategory];
-
-// Class naming
-public class [Feature]Operator : IDeviceOperator
-public class [Feature]ViewModel : BaseViewModel
-public class [Feature]Step : BaseStep
-
-// Method naming - use descriptive names
-public Result ExecuteCommand(string command, int timeout)
-public void AddLog(string message, bool upload = false)
+```
+/
+├── LMSA.sln                           # Solution file (CREATE with dotnet new sln)
+├── LMSA.Framework.Services/           # CREATE: Plugin interfaces, device models
+├── LMSA.Framework.DeviceManagement/   # CREATE: ADB/Fastboot wrappers
+├── LMSA.Framework.SmartDevice/        # CREATE: Recipe-based flashing engine
+├── LMSA.Framework.Download/           # CREATE: Download controllers
+├── LMSA.Framework.HostController/     # CREATE: Plugin loading & lifecycle
+├── LMSA.Framework.Language/           # CREATE: Multi-language support
+├── LMSA.Framework.Pipes/             # CREATE: Named pipe IPC
+├── LMSA.Framework.Socket/            # CREATE: Socket communication
+├── LMSA.Framework.Resources/         # CREATE: Resource management
+├── LMSA.Framework.SmartBase/         # CREATE: Base classes
+├── LMSA.Framework.UpdateVersion/     # CREATE: Auto-update framework
+├── LMSA.Common.Log/                  # CREATE: Encrypted logging
+├── LMSA.Common.Utilities/            # CREATE: ProcessRunner, helpers
+├── LMSA.Common.WebServices/          # CREATE: RSA-authenticated HTTP
+├── LMSA.Common/                      # CREATE: Exception codes, form verify
+├── LMSA.HostProxy/                   # CREATE: Host integration
+├── LMSA.App/                         # CREATE: WPF main application (dotnet new wpf)
+├── LMSA.WindowsService/              # CREATE: Background service (dotnet new worker)
+├── LMSA.Themes/                      # CREATE: WPF themes
+├── LMSA.Plugins.Flash/               # CREATE: Flash/Rescue plugin
+├── LMSA.Plugins.PhoneManager/        # CREATE: Phone manager plugin
+├── LMSA.Plugins.BackupRestore/       # CREATE: Backup/restore plugin
+├── LMSA.Plugins.DataTransfer/        # CREATE: Data transfer plugin
+├── LMSA.Plugins.HardwareTest/        # CREATE: Hardware test plugin
+├── LMSA.Plugins.Toolbox/             # CREATE: Toolbox plugin
+├── LMSA.Plugins.Support/             # CREATE: Support plugin
+├── LMSA.Tests/                       # CREATE: xUnit tests (dotnet new xunit)
+├── config/                            # COPY from decompiled/reference/:
+│   ├── plugins.xml                    #   Plugin catalog (original)
+│   ├── download-config.xml            #   Download settings (original)
+│   ├── log4net.config                 #   Logging config (original)
+│   ├── log4net.plugin.config          #   Plugin logging (original)
+│   └── nt-log4net.config              #   Service logging (original)
+└── decompiled/                        # Reference only (read-only, .gitignore)
+    ├── reference/                     # Original binaries
+    └── reference-src/                 # Decompiled .cs files
 ```
 
-### Device Operations Pattern
+## Assembly-to-Project Mapping
+
+| Original Assembly | LMSA Project | `dotnet new` Type |
+|---|---|---|
+| `lenovo.mbg.service.framework.services` | `LMSA.Framework.Services` | classlib |
+| `lenovo.mbg.service.framework.devicemgt` | `LMSA.Framework.DeviceManagement` | classlib |
+| `lenovo.mbg.service.framework.smartdevice` | `LMSA.Framework.SmartDevice` | classlib |
+| `lenovo.mbg.service.framework.download` | `LMSA.Framework.Download` | classlib |
+| `lenovo.mbg.service.framework.hostcontroller` | `LMSA.Framework.HostController` | classlib |
+| `lenovo.mbg.service.framework.lang` | `LMSA.Framework.Language` | classlib |
+| `lenovo.mbg.service.framework.pipes` | `LMSA.Framework.Pipes` | classlib |
+| `lenovo.mbg.service.framework.socket` | `LMSA.Framework.Socket` | classlib |
+| `lenovo.mbg.service.framework.resources` | `LMSA.Framework.Resources` | classlib |
+| `lenovo.mbg.service.framework.smartbase` | `LMSA.Framework.SmartBase` | classlib |
+| `lenovo.mbg.service.framework.updateversion` | `LMSA.Framework.UpdateVersion` | classlib |
+| `lenovo.mbg.service.common.log` | `LMSA.Common.Log` | classlib |
+| `lenovo.mbg.service.common.utilities` | `LMSA.Common.Utilities` | classlib |
+| `lenovo.mbg.service.common.webservices` | `LMSA.Common.WebServices` | classlib |
+| `lenovo.mbg.service.lmsa.common` | `LMSA.Common` | classlib |
+| `lenovo.mbg.service.lmsa.hostproxy` | `LMSA.HostProxy` | classlib |
+| `Software Fix.exe` | `LMSA.App` | wpf |
+| `LmsaWindowsService.exe` | `LMSA.WindowsService` | worker |
+| `lenovo.themes.generic` | `LMSA.Themes` | classlib |
+| Plugin: flash | `LMSA.Plugins.Flash` | classlib |
+| Plugin: phoneManager | `LMSA.Plugins.PhoneManager` | classlib |
+| Plugin: backuprestore | `LMSA.Plugins.BackupRestore` | classlib |
+| Plugin: dataTransfer | `LMSA.Plugins.DataTransfer` | classlib |
+| Plugin: hardwaretest | `LMSA.Plugins.HardwareTest` | classlib |
+| Plugin: toolbox | `LMSA.Plugins.Toolbox` | classlib |
+| Plugin: support | `LMSA.Plugins.Support` | classlib |
+
+## Key Interfaces From Decompiled Code
+
 ```csharp
-// ADB command execution
-public string Command(string command, int timeout = -1, string deviceID = "")
-{
-    string adbPath = Configurations.AdbPath;
-    string fullCommand = !string.IsNullOrEmpty(deviceID)
-        ? $"-s {deviceID} {command}"
-        : command;
-    return ProcessRunner.ProcessString(adbPath, fullCommand, timeout);
+// IPlugin — every plugin must implement this
+public interface IPlugin {
+    void Init();
+    FrameworkElement CreateControl(IMessageBox iMsg);
+    bool CanClose();
+    bool IsExecuteWork();
+    void OnSelected(string val);
+    void OnSelecting(string val);
+    void OnInit(object data);
+    bool IsNonBusinessPage();
 }
 
-// Fastboot command execution
-public string ExecuteFastboot(string command, int timeout)
-{
-    string exe = LoadToolPath("fastboot.exe");
-    string encapsulated = EncapsulationFastbootCommand(command);
-    return ProcessRunner.ProcessString(exe, encapsulated, timeout);
+// IHost — service locator for plugins
+public interface IHost : IServiceProvider {
+    IntPtr HostMainWindowHandle { get; }
+    int HostProcessId { get; }
+    T GetService<T>(string name);
+    void RegisterService(string name, object value);
 }
-```
 
-### Logging Pattern
-```csharp
-// Always log operations
-Log.AddLog($"Command: {command}, Response: {response}", upload: true);
+// IDeviceOperator — unified device command interface
+public interface IDeviceOperator {
+    string Command(string command, int timeout = -1, string deviceID = "");
+    string Shell(string deviceID, string command);
+    void Install(string deviceID, string apkPath);
+    void Uninstall(string deviceID, string apkName);
+    void ForwardPort(string deviceID, int devicePort, int localPort);
+    void RemoveForward(string deviceID, int localPort);
+    void RemoveAllForward(string deviceID);
+    void PushFile(string deviceID, string localFilePath, string deviceFilePath);
+    void Reboot(string deviceID, string mode);
+    List<string> FindDevices();
+}
 
-// Log results with appropriate status
-Log.AddResult(this, Result.PASSED, null);
-Log.AddResult(this, Result.FAILED, "Error description");
-```
-
-### WPF/XAML UI Pattern
-```csharp
-// ViewModel with INotifyPropertyChanged
-public class FeatureViewModel : BaseViewModel
-{
-    private string _status;
-    public string Status
-    {
-        get => _status;
-        set { _status = value; OnPropertyChanged(); }
-    }
-
-    public RelayCommand ExecuteCommand { get; set; }
+// Result — 43-value enum for operation results
+public enum Result {
+    FAILED, PASSED, QUIT, MANUAL_QUIT, INTERCEPTOR_QUIT, ABORTED,
+    SKIPPED, CANCELED, ADB_CONNECT_FAILED, /* ... 34 more values ... */
+    CLIENT_VERSION_LOWER_QUIT
 }
 ```
 
 ## What You Must Do
 
-1. **Check project structure**: Verify that the solution file and project directories exist. If not, initialize them with `dotnet new` commands (classlib, xunit, etc.). If already initialized, skip this step.
-2. **Read the task list**: Start by reading `IMPLEMENTATION_TASKLIST.md`
-3. **Use sequential-thinking MCP**: Reason through the approach before writing code
-4. **Pick next task**: Find the next unchecked task in priority order
-5. **Check memory MCP**: Recall any stored patterns relevant to this task
-6. **Reverse engineering analysis (mandatory)**: Before implementing any feature, browse `decompiled/reference-src/` via filesystem MCP to find and analyze the relevant decompiled classes — identify classes, interfaces, enums, method signatures, data flow, and dependencies
-7. **Review existing code**: Read the current `LMSA.*` project sources to understand what has already been implemented
-8. **Implement feature**: Create the C# implementation that faithfully reproduces the decompiled logic
-9. **Add tests**: Create unit tests for core functionality
-10. **Update memory MCP**: Store key patterns for future reference
-11. **Update task list**: Mark the task as complete with `[x]`
-12. **Continue immediately**: Move to the next unchecked task without stopping
+1. **Create everything from scratch** — no existing code exists
+2. **Read decompiled sources** as the ground truth for all implementations
+3. **Faithfully reproduce** every class, interface, enum, and algorithm
+4. **Copy original config files** from `decompiled/reference/` into the project
+5. **Write xUnit tests** for all code
+6. **Build and verify** with `dotnet build` and `dotnet test`
+7. **Mark tasks complete** in `IMPLEMENTATION_TASKLIST.md`
 
 ## What You Must NOT Do
 
-- ❌ Don't create documentation files unless explicitly asked
-- ❌ Don't add unnecessary abstractions or over-engineering
-- ❌ Don't use async/await unless dealing with I/O operations
-- ❌ Don't add features not in the task list
-- ❌ Don't modify decompiled source files (read-only reference)
-- ❌ Don't use jQuery or obsolete patterns
-- ❌ Don't skip error handling or logging
-
-## Directory Structure
-
-```
-/
-├── .github/
-│   ├── agents/                      # Custom Copilot agents
-│   ├── workflows/                   # GitHub Actions workflows
-│   └── copilot-instructions.md      # Project requirements
-├── LMSA.Core/                       # PRODUCTION: Core infrastructure
-│   ├── Logging/
-│   ├── Configuration/
-│   └── Utilities/
-├── LMSA.DeviceManagement/           # PRODUCTION: Device operations
-│   ├── ADB/
-│   │   ├── AdbOperator.cs          # Real ADB implementation
-│   │   └── AdbConnectionMonitor.cs
-│   ├── Fastboot/
-│   │   ├── FastbootOperator.cs     # Real Fastboot implementation
-│   │   └── FastbootConnectionMonitor.cs
-│   └── DeviceInfo/
-├── LMSA.Plugins.Common/             # PRODUCTION: Plugin framework
-│   ├── IPlugin.cs
-│   └── PluginLoader.cs
-├── LMSA.Plugins.PhoneManager/       # PRODUCTION: Phone manager plugin
-├── LMSA.Plugins.Flash/              # PRODUCTION: Firmware flash plugin
-├── LMSA.Plugins.BackupRestore/      # PRODUCTION: Backup/restore plugin
-├── LMSA.App/                        # PRODUCTION: WPF main application
-│   ├── ViewModels/
-│   ├── Views/
-│   └── App.xaml
-├── LMSA.Tests/                      # Unit and integration tests
-└── decompiled/                      # Reference only (read-only, in .gitignore)
-    └── reference-src/               # Decompiled patterns for reference
-```
-
-## Implementation Standards
-
-1. **Implement REAL code**: Write actual, working C# code that faithfully reproduces decompiled logic
-2. **Follow decompiled patterns**: Use `decompiled/reference-src/` as the ground truth for structure and behavior
-3. **Build working features**: Each task must result in compilable, testable code
-4. **Test thoroughly**: Write and run tests for every feature
-5. **Handle errors properly**: Implement robust error handling for device operations
-6. **Log everything**: Add comprehensive logging for debugging and diagnostics
-7. **Update task list**: Mark tasks complete with `[x]` after verification
-8. **Continue the loop**: Immediately start the next unchecked task
-
-## What You Must NOT Do
-
-- ❌ Don't create example/demo code - this is PRODUCTION code
-- ❌ Don't create placeholder implementations - write complete features
+- ❌ Don't create demo/example code — this is PRODUCTION code
+- ❌ Don't create placeholder implementations — write complete features
 - ❌ Don't skip error handling or validation
-- ❌ Don't create TODO comments - implement fully or don't commit
 - ❌ Don't modify decompiled reference sources (read-only)
 - ❌ Don't commit code that doesn't compile
-- ❌ Don't commit code without tests
-- ❌ Don't add features not in the task list
+- ❌ Don't assume any project structure exists — create it all
 
 ## Testing Requirements
 
-Write production-quality tests for every feature:
-
 ```csharp
-// Unit test pattern
 [Fact]
 public void AdbOperator_ExecuteCommand_ReturnsValidResponse()
 {
     // Arrange
-    var mockProcess = new MockProcessRunner();
-    var operator = new AdbOperator(mockProcess);
+    var mockProcess = new Mock<IProcessRunner>();
+    mockProcess.Setup(p => p.ProcessString(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>()))
+        .Returns("device123\tdevice");
+    var sut = new AdbOperator(mockProcess.Object);
 
     // Act
-    var result = operator.Command("shell getprop", 5000, "device123");
+    var result = sut.Command("devices", 5000);
 
     // Assert
-    Assert.NotNull(result);
-    Assert.DoesNotContain("error", result.ToLower());
-}
-
-// Integration test pattern
-[Fact]
-public async Task FlashManager_FlashPartition_CompletesSuccessfully()
-{
-    // Arrange
-    var flashManager = new FlashManager();
-    var partition = new PartitionInfo { Name = "boot", ImagePath = "boot.img" };
-
-    // Act
-    var result = await flashManager.FlashPartitionAsync(partition);
-
-    // Assert
-    Assert.Equal(Result.PASSED, result);
+    result.Should().Contain("device123");
 }
 ```
 
-**Test Coverage**:
-- Unit tests for all operators (ADB, Fastboot)
-- Integration tests for plugin workflows
-- Mock device connections for testing
-- Test error handling and retry logic
-- Test timeout scenarios
-
-## Commands to Use
-
-Build and test your production code:
+## Commands
 
 ```bash
-# Find the solution file (may be .sln or .slnx)
-SLN=$(ls *.sln *.slnx 2>/dev/null | head -1)
-
-# Build the solution
-dotnet build "$SLN"
-
-# Run tests
-dotnet test LMSA.Tests/LMSA.Tests.csproj
-
-# Run tests with coverage
-dotnet test LMSA.Tests/LMSA.Tests.csproj --collect:"XPlat Code Coverage"
-
-# Format code
-dotnet format "$SLN"
-
-# Build specific project
-dotnet build LMSA.DeviceManagement/LMSA.DeviceManagement.csproj
-
-# Initialize project structure (only if not already initialized)
-# Check first: ls *.sln *.slnx 2>/dev/null
-# If no solution file exists, create one:
+# Create solution from scratch
 dotnet new sln -n LMSA
-dotnet new classlib -n LMSA.Core -f net8.0
-dotnet sln add LMSA.Core/LMSA.Core.csproj
-# ... repeat for other projects
-```
+dotnet new classlib -n LMSA.Framework.Services -f net8.0
+dotnet sln LMSA.sln add LMSA.Framework.Services/LMSA.Framework.Services.csproj
+# ... repeat for all 26 projects
 
-## MCP Tools Workflow
+# Build
+dotnet build LMSA.sln
 
-Use MCP servers at every step:
-
-1. **Sequential-Thinking MCP**: Use before writing any code to reason through design
-   - Break down complex tasks into ordered steps
-   - Evaluate tradeoffs between approaches
-   - Plan error handling strategy
-
-2. **Filesystem MCP**: Browse decompiled reference sources
-   - `decompiled/reference-src/` contains all recursively decompiled .cs files
-   - Find classes by name: search for `class AdbOperator`, `class FastbootOperator`, etc.
-   - DO NOT modify decompiled sources
-
-3. **Memory MCP**: Persist and recall implementation context
-   - Store discovered patterns: `store("AdbOperator pattern", "...")`
-   - Store namespace mappings, class hierarchies, enum values
-   - Recall on next task: `recall("device management patterns")`
-
-4. **GitHub MCP**: Manage implementation progress
-   - Update `IMPLEMENTATION_TASKLIST.md` with task completions
-   - Track issues and blockers
-   - Review PR status
-
-## Implementation Example
-
-Here's how to implement a real feature:
-
-**Task**: Implement ADB device detection and connection monitoring
-
-**Step 1**: Read reference code
-```bash
-# Use filesystem MCP to browse decompiled patterns
-cat decompiled/reference-src/devicemgt/AdbOperator.cs
-```
-
-**Step 2**: Write production implementation
-```csharp
-// File: LMSA.DeviceManagement/ADB/AdbOperator.cs
-using AdvancedSharpAdbClient;
-using lenovo.mbg.service.framework.common;
-
-namespace lenovo.mbg.service.framework.devicemgt
-{
-    public class AdbOperator : IDeviceOperator
-    {
-        private readonly IAdbClient _adbClient;
-        private readonly ILog _log = LogManager.GetLogger(typeof(AdbOperator));
-
-        public AdbOperator()
-        {
-            _adbClient = AdbConnectionMonitorEx.m_AdbClient;
-        }
-
-        public string Command(string command, int timeout = -1, string deviceID = "")
-        {
-            string adbPath = Configurations.AdbPath;
-            string fullCommand = !string.IsNullOrEmpty(deviceID)
-                ? $"-s {deviceID} {command}"
-                : command;
-
-            _log.Info($"Executing ADB command: {fullCommand}");
-            string response = ProcessRunner.ProcessString(adbPath, fullCommand, timeout);
-            _log.Debug($"ADB response: {response}");
-
-            return response;
-        }
-    }
-}
-```
-
-**Step 3**: Write tests
-```csharp
-// File: LMSA.Tests/DeviceManagement/AdbOperatorTests.cs
-public class AdbOperatorTests
-{
-    [Fact]
-    public void Command_WithDeviceID_IncludesDeviceIDInCommand()
-    {
-        var operator = new AdbOperator();
-        var result = operator.Command("shell getprop", 5000, "ABC123");
-        Assert.NotNull(result);
-    }
-}
-```
-
-**Step 4**: Build and test
-```bash
-dotnet build LMSA.DeviceManagement/LMSA.DeviceManagement.csproj
+# Test
 dotnet test LMSA.Tests/LMSA.Tests.csproj
-```
-
-**Step 5**: Mark task complete in IMPLEMENTATION_TASKLIST.md
-```markdown
-- [x] Implement ADB device detection and connection monitoring
 ```
 
 ## Success Criteria
 
-Your implementation is complete when:
 - ✅ All code compiles without errors
 - ✅ All tests pass
-- ✅ Error handling is comprehensive
-- ✅ Logging is in place
-- ✅ Feature works with real Android devices
-- ✅ Task is marked complete in task list
-- ✅ Code follows project patterns and standards
-
-Remember: You're building REAL software that will manage REAL Android devices. Quality and reliability are critical.
+- ✅ Every class from decompiled reference is reimplemented
+- ✅ Original config files are preserved in the project
+- ✅ Error handling and logging are comprehensive
+- ✅ All tasks marked complete in task list
