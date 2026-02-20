@@ -6,4 +6,14 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+    <PackageReference Include="SharpAdbClient" Version="2.3.23" />
+    <PackageReference Include="System.Management" Version="10.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\LMSA.Core\LMSA.Core.csproj" />
+  </ItemGroup>
+
 </Project>
