@@ -52,6 +52,7 @@ jobs:
       # Download reference binaries for pattern analysis
       - name: Download LMSA reference binaries
         run: |
+          mkdir -p decompiled/reference
           wget -q -O /tmp/lmsa.zip "https://www.dropbox.com/scl/fi/3kuolvy11282n0q0pw99b/examples.zip?rlkey=1rldjq71q8igq0ban9lg9homn&st=07i1mewd&dl=1"
           unzip -q /tmp/lmsa.zip -d decompiled/reference
           echo "Downloaded LMSA reference binaries for analysis"
