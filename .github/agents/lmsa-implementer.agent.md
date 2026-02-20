@@ -1,7 +1,7 @@
 ---
 name: lmsa_implementer
 description: Expert C# .NET developer specializing in implementing LMSA features from decompiled sources
-target: vscode
+target: github-copilot
 tools:
   - read
   - edit
@@ -10,6 +10,23 @@ tools:
   - glob
   - bash
 infer: true
+mcp-servers:
+  filesystem:
+    command: npx
+    args:
+      - "-y"
+      - "@modelcontextprotocol/server-filesystem"
+      - "/home/runner/work/moto/moto/decompiled"
+      - "/home/runner/work/moto/moto/examples"
+    description: Access to decompiled sources and example binaries
+  github:
+    command: npx
+    args:
+      - "-y"
+      - "@modelcontextprotocol/server-github"
+    env:
+      GITHUB_PERSONAL_ACCESS_TOKEN: "{{GITHUB_TOKEN}}"
+    description: GitHub repository operations and issue tracking
 metadata:
   team: lmsa-development
   specialization: device-management
@@ -198,9 +215,11 @@ dotnet format --verify-no-changes
 dotnet restore
 ```
 
-## MCP Tools Configuration
+## MCP Tools and Servers Configuration
 
-Use these MCP tools for development:
+### Available MCP Tools
+
+Use these tools for development:
 
 - **read**: Read decompiled sources and implementation files
 - **write**: Create new implementation files
@@ -208,6 +227,27 @@ Use these MCP tools for development:
 - **grep**: Search for patterns in decompiled sources
 - **glob**: Find files matching patterns
 - **bash**: Run build, test, and verification commands
+
+### MCP Servers
+
+This agent has access to the following MCP servers:
+
+1. **filesystem** - Access decompiled sources and example binaries
+   - Paths: `/home/runner/work/moto/moto/decompiled`, `/home/runner/work/moto/moto/examples`
+   - Use for reading reference implementation patterns
+
+2. **github** - GitHub repository operations
+   - Access issues, pull requests, and repository metadata
+   - Use for tracking implementation progress
+
+### Tool Usage Actions
+
+- **Before implementing**: Use `read` to study decompiled sources in `decompiled/` directory
+- **During implementation**: Use `write` to create new files, `edit` to modify existing ones
+- **For research**: Use `grep` to find specific patterns (e.g., error handling, command execution)
+- **For discovery**: Use `glob` to locate files by pattern (e.g., `**/*Operator.cs`)
+- **For validation**: Use `bash` to run `dotnet build`, `dotnet test`, `dotnet format`
+- **For tracking**: Use github MCP server to update task status and documentation
 
 ## Success Criteria
 
