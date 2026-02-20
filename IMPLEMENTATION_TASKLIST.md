@@ -1,16 +1,26 @@
-# LMSA Production Implementation Task List
+# LMSA Open-Source Reimplementation Task List
 
 ## Overview
-This task list contains all features and functions that must be implemented to create a complete, production-ready Lenovo Mobile Software Assistant (LMSA) application.
+This task list tracks the complete reimplementation of the Lenovo Mobile Software Assistant (LMSA) as open-source C# code. The reference material is the set of recursively decompiled .NET binaries in `decompiled/reference-src/`.
 
-**Goal**: Build a REAL, working LMSA application using the decompiled sources as reference patterns. This is NOT a demo or example - this is production software that will manage real Android devices.
+**Goal**: Build a REAL, working open-source LMSA application by faithfully reproducing the decompiled classes, enums, interfaces, and logic. This is NOT a demo or example — this is production software that will manage real Android devices.
 
 **Implementation Approach**:
-1. Study decompiled reference code in `decompiled/reference-src/` for patterns
-2. Implement production code in `LMSA.*` project directories
-3. Write comprehensive tests for all features
-4. Build and verify each component works correctly
-5. Mark tasks complete with `[x]` only after verification
+1. CI workflow recursively decompiles all .NET DLLs and EXEs from `decompiled/reference/` using `ilspycmd`
+2. Study decompiled output in `decompiled/reference-src/` for exact class structure and logic
+3. Implement clean, open-source C# code in `LMSA.*` project directories
+4. Write comprehensive tests for all features
+5. Build and verify each component works correctly
+6. Mark tasks complete with `[x]` only after verification
+
+---
+
+## Phase 0: Decompilation Setup (Prerequisite)
+
+- [ ] Verify all reference binaries are present in `decompiled/reference/`
+- [ ] Confirm CI workflow has recursively decompiled all DLLs and EXEs to `decompiled/reference-src/`
+- [ ] Catalog all decompiled namespaces and top-level classes in `decompiled/reference-src/`
+- [ ] Map decompiled assembly structure to `LMSA.*` project directories
 
 ---
 
@@ -317,9 +327,10 @@ This task list contains all features and functions that must be implemented to c
 
 ## Implementation Notes
 
-- **Technology Stack**: C# .NET Framework, WPF for UI
+- **Technology Stack**: C# .NET 8 / .NET Framework 4.7.2, WPF for UI
 - **Key Libraries**: SharpAdbClient, Newtonsoft.Json, log4net, BouncyCastle
-- **Architecture**: Plugin-based modular design
+- **Architecture**: Plugin-based modular design matching original LMSA structure
+- **Reference**: All decompiled `.cs` files in `decompiled/reference-src/` are the ground truth
 - **Device Support**: Lenovo and Motorola Android devices
 - **Deployment**: Windows desktop application with optional Windows service
 
@@ -327,12 +338,12 @@ This task list contains all features and functions that must be implemented to c
 
 ## Estimated Complexity
 
-- **Total Tasks**: 28 major feature areas
+- **Total Tasks**: 28+ major feature areas (plus Phase 0 decompilation setup)
 - **Sub-tasks**: 150+ individual implementation items
 - **Complexity**: High (device communication, multi-threading, plugin system)
-- **Testing Requirements**: Extensive (requires physical device testing)
+- **Testing Requirements**: Extensive (requires physical device testing for integration)
 
 ---
 
 **Last Updated**: February 20, 2026
-**Source**: Decompiled from LMSA Software Fix.exe and associated DLLs
+**Source**: Recursively decompiled from LMSA Software Fix.exe and all associated DLLs using ilspycmd

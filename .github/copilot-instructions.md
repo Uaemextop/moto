@@ -2,11 +2,13 @@
 
 ## Project Overview
 
-This project is a C# .NET Framework implementation of the Lenovo Mobile Software Assistant (LMSA), a Windows desktop application for managing, rescuing, and flashing firmware to Lenovo and Motorola Android devices.
+This project is an **open-source reimplementation** of the Lenovo Mobile Software Assistant (LMSA), a Windows desktop application for managing, rescuing, and flashing firmware to Lenovo and Motorola Android devices.
 
-**Project Goal**: Implement a complete, production-ready version of LMSA based on decompiled source code analysis.
+**Project Goal**: Produce a complete, clean open-source C# codebase by studying the recursively decompiled .NET binaries (DLLs and EXEs) of the original LMSA application. The decompiled sources in `decompiled/reference-src/` are the authoritative reference — every class, method signature, enum, and algorithm must be faithfully reproduced in the `LMSA.*` projects.
 
-**IMPORTANT**: This is a REAL, production application - not an example, demo, or reference implementation. You are writing actual working code that will manage real Android devices.
+**Decompilation workflow**: All .NET DLLs and EXEs in `decompiled/reference/` are automatically decompiled recursively by the CI setup workflow using `ilspycmd`. The resulting `.cs` files in `decompiled/reference-src/` serve as the reference for implementation.
+
+**IMPORTANT**: This is a REAL, production application — not an example, demo, or reference implementation. You are writing actual working code that will manage real Android devices.
 
 ---
 
